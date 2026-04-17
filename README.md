@@ -64,7 +64,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 ### Comenzi
 | Comanda |  Descriere  |
 |---------|-------------|
-| `make all`   | Compile the project for Arduino Nano. |
+| `make all`   | Compile the project. |
 | `make flash` | Flash the firmware to the connected board. |
 | `make clean` | Remove build artifacts. |
 
