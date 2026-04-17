@@ -1,9 +1,11 @@
 # Sistem-Automat-de-Irigare-pentru-Plante
 
 Acest repository este dedicat dezvoltării unui sistem inteligent de irigare automatizată, conceput pentru gestionarea eficientă a udării plantelor la scară mică.
+
 Proiectul utilizează o arhitectură de tip Master-Slave bazată pe două plăci Arduino (Arduino Uno; Arduino Nano), care colaborează pentru a monitoriza și controla în timp real umiditatea solului.
 Scopul principal al sistemului este menținerea unei umidități optime a solului pentru a susține sănătatea plantelor, reducând în același timp intervenția omului.
 Prin folosirea senzorilor de umiditate, a unui sistem de distribuție a apei și a unui display pentru afișarea datelor relevante, utilizatorul beneficiază de o soluție eficientă și ușor de utilizat.
+
 Repository-ul conține codul sursă, documentația și resursele necesare pentru înțelegerea, reproducerea și extinderea acestui sistem.
 
 ## Specificații
@@ -55,7 +57,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 ### Comenzi
 | Comanda |  Descriere  |
 |---------|-------------|
-| `make all BOARD=nano` | Compile the project for Arduino Nano. |
+| `make all`   | Compile the project for Arduino Nano. |
 | `make flash` | Flash the firmware to the connected board. |
 | `make clean` | Remove build artifacts. |
 
