@@ -25,7 +25,14 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 
 ## Roadmap
 
--
+- [ ] GPIO driver
+- [ ] ADC driver
+- [ ] EEPROM driver
+- [ ] Interrupt driver
+- [ ] Timer driver
+- [ ] PWM driver
+- [ ] I2C driver
+
 
 ## Structura Proiect
 
