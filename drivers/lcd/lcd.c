@@ -1,6 +1,6 @@
 #include "lcd.h"
 #include "drivers/gpio/gpio.h"
-#include <util/delay.h>
+#include "util/delay.h"
 
 /**
  * @brief Trimite un puls scurt pe pinul Enable (E).
