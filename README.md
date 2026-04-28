@@ -32,6 +32,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 - [ ] Timer driver
 - [ ] PWM driver
 - [ ] I2C driver
+- [ ] Lcd driver
 
 
 ## Structura Proiect
@@ -44,6 +45,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 │   ├── gpio/
 │   ├── interrupt/
 │   └── timer/
+│   └── lcd/
 ├── src/            
 ├── test/          
 │   ├── mocks/      
