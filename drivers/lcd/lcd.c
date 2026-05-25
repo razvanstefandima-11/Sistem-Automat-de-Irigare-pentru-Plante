@@ -1,6 +1,6 @@
 #include "lcd.h"
 #include "drivers/gpio/gpio.h"
-#include "util/delay.h"
+#include "utils/delay.h"
 
 /**
  * @brief Trimite un puls scurt pe pinul Enable (E).
@@ -8,9 +8,9 @@
  */
 static void LCD_PulseEnable(void) {
     GPIO_Write(LCD_E_PIN, GPIO_HIGH);
-    _delay_us(1); // Ecranul are nevoie de minim 450ns
+    Delay(1); // Ecranul are nevoie de minim 450ns
     GPIO_Write(LCD_E_PIN, GPIO_LOW);
-    _delay_us(100); // Așteptăm ca LCD-ul să proceseze datele
+    Delay(100); // Așteptăm ca LCD-ul să proceseze datele
 }
 
 /**
@@ -39,7 +39,7 @@ void LCD_Command(uint8_t cmd) {
     LCD_Write4Bits(cmd & 0x0F);
     
     if (cmd == LCD_CMD_CLEAR_DISPLAY || cmd == LCD_CMD_RETURN_HOME) {
-        _delay_ms(2); // Aceste comenzi durează mai mult
+        Delay(2); // Aceste comenzi durează mai mult
     }
 }
 
@@ -66,13 +66,13 @@ void LCD_Init(void) {
     GPIO_Write(LCD_E_PIN, GPIO_LOW);
     
     // 2. Așteptăm ca LCD-ul să se alimenteze complet (>15ms)
-    _delay_ms(20);
+    Delay(20);
     
     // 3. Secvența strictă de resetare hardware cerută de HD44780
     LCD_Write4Bits(0x03);
-    _delay_ms(5);
+    Delay(5);
     LCD_Write4Bits(0x03);
-    _delay_us(150);
+    Delay(150);
     LCD_Write4Bits(0x03);
     
     // 4. Setăm ecranul în modul 4-biți

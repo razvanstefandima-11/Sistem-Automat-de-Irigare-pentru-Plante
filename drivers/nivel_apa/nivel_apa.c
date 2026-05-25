@@ -21,7 +21,7 @@ uint16_t NivelApa_Citeste(void) {
     GPIO_Write(PIN_ALIMENTARE_SENZOR, GPIO_HIGH);
     
     // 2. Așteptăm puțin să se stabilizeze tensiunea și curentul pe senzor
-    delay_ms(10);
+    Delay(10);
     
     // 3. Efectuăm citirea analogică de pe pinul A3
     uint16_t nivel = ADC_Read(CANAL_ADC_APA);
