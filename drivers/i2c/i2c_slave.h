@@ -1,9 +1,17 @@
-#ifndef I2C_SLAVE_H
-#define I2C_SLAVE_H
+#ifndef I2C_SLAVE_H_
+#define I2C_SLAVE_H_
 
-#include <stdint.h>
+#ifndef F_CPU
+#define F_CPU 16000000UL
+#endif
 
-// Inițializează modulul TWI în modul Slave și îl pune în ascultare
-void I2C_Slave_Init(uint8_t slave_addr);
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
-#endif // I2C_SLAVE_H
+// Expunem variabilele global pentru a fi vizibile în tot proiectul
+extern volatile uint8_t i2c_received_byte;
+extern volatile uint8_t i2c_data_ready;
+
+void i2c_slave_init(uint8_t address);
+
+#endif /* I2C_SLAVE_H_ */

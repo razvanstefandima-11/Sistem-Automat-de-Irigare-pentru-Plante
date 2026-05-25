@@ -4,52 +4,65 @@
 
 /**
  * @brief Trimite un puls scurt pe pinul Enable (E).
- * Acest puls îi spune ecranului să citească datele de pe pinii D4-D7.
  */
 static void LCD_PulseEnable(void) {
     GPIO_Write(LCD_E_PIN, GPIO_HIGH);
-    Delay(1); // Ecranul are nevoie de minim 450ns
+    
+    // Înlocuim Delay(1) ms cu câteva NOP-uri pentru un puls rapid și precis (>450ns)
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    asm volatile("nop");
+    
     GPIO_Write(LCD_E_PIN, GPIO_LOW);
-    Delay(100); // Așteptăm ca LCD-ul să proceseze datele
+    
+    // Ecranul are nevoie de ~37 microsecunde să proceseze nibble-ul citit.
+    Delay(1); 
 }
 
 /**
  * @brief Trimite 4 biți (un nibble) către pinii de date ai LCD-ului.
- * @param nibble Cei 4 biți de date plasați în partea de jos a octetului (biții 0-3).
  */
 static void LCD_Write4Bits(uint8_t nibble) {
-    // Extragem fiecare bit din nibble și îl punem pe pinul corespunzător
     GPIO_Write(LCD_D4_PIN, (nibble & 0x01) ? GPIO_HIGH : GPIO_LOW);
     GPIO_Write(LCD_D5_PIN, (nibble & 0x02) ? GPIO_HIGH : GPIO_LOW);
     GPIO_Write(LCD_D6_PIN, (nibble & 0x04) ? GPIO_HIGH : GPIO_LOW);
     GPIO_Write(LCD_D7_PIN, (nibble & 0x08) ? GPIO_HIGH : GPIO_LOW);
 
-    
     LCD_PulseEnable();
 }
 
+// ==========================================
 // FUNCȚII PUBLICE (API) - Expuse în lcd.h
+// ==========================================
 
 void LCD_Command(uint8_t cmd) {
     GPIO_Write(LCD_RS_PIN, GPIO_LOW); // RS = LOW înseamnă COMANDĂ
     
-    // Trimitem întâi cei 4 biți superiori (High Nibble)
     LCD_Write4Bits(cmd >> 4);
-    // Trimitem apoi cei 4 biți inferiori (Low Nibble)
     LCD_Write4Bits(cmd & 0x0F);
     
     if (cmd == LCD_CMD_CLEAR_DISPLAY || cmd == LCD_CMD_RETURN_HOME) {
-        Delay(2); // Aceste comenzi durează mai mult
+        Delay(3); // Aceste comenzi durează mai mult (~1.5ms), punem 3ms pentru siguranță
+    } else {
+        Delay(1); // Siguranță pentru restul comenzilor
     }
 }
 
 void LCD_Char(char data) {
     GPIO_Write(LCD_RS_PIN, GPIO_HIGH); // RS = HIGH înseamnă DATE (TEXT)
     
-    // Trimitem întâi cei 4 biți superiori
+    // 1. Trimitem prima jumătate de literă (High Nibble)
     LCD_Write4Bits(data >> 4);
-    // Trimitem apoi cei 4 biți inferiori
+    
+    // 2. Trimitem a doua jumătate de literă (Low Nibble)
     LCD_Write4Bits(data & 0x0F);
+    
+    // 3. SECRETUL PENTRU A SCĂPA DE GARBAGE DATA:
+    // Oferim LCD-ului 2 milisecunde să lipească ambele jumătăți și să afișeze litera
+    // înainte ca bucla while din LCD_String să ne trimită următoarea literă.
+    Delay(2); 
 }
 
 void LCD_Init(void) {
@@ -65,38 +78,42 @@ void LCD_Init(void) {
     GPIO_Write(LCD_RS_PIN, GPIO_LOW);
     GPIO_Write(LCD_E_PIN, GPIO_LOW);
     
-    // 2. Așteptăm ca LCD-ul să se alimenteze complet (>15ms)
-    Delay(20);
+    // 2. Așteptăm ca LCD-ul să se alimenteze complet
+    Delay(50); 
     
-    // 3. Secvența strictă de resetare hardware cerută de HD44780
+    // 3. Secvența strictă de resetare hardware
     LCD_Write4Bits(0x03);
     Delay(5);
+    
     LCD_Write4Bits(0x03);
-    Delay(150);
+    Delay(1); 
+    
     LCD_Write4Bits(0x03);
+    Delay(1); 
     
     // 4. Setăm ecranul în modul 4-biți
     LCD_Write4Bits(0x02);
+    Delay(1); 
     
-    // 5. Acum putem folosi funcțiile standard de comenzi
+    // 5. Acum putem folosi funcțiile standard de comenzi pe 8-biți (trimise în 2 pași)
     LCD_Command(LCD_CMD_4BIT_2LINES);
-    LCD_Command(LCD_CMD_DISPLAY_ON);
+    LCD_Command(0x08); // Display off command
     LCD_Command(LCD_CMD_CLEAR_DISPLAY);
     LCD_Command(LCD_CMD_ENTRY_MODE);
+    LCD_Command(LCD_CMD_DISPLAY_ON);  // Îl pornim la final
 }
 
 void LCD_String(const char *str) {
-    // Parcurgem șirul de caractere până la caracterul null ('\0')
+    // Parcurgem textul literă cu literă până dăm de caracterul null ('\0')
     while (*str) {
         LCD_Char(*str++);
     }
 }
 
 void LCD_SetCursor(uint8_t row, uint8_t col) {
-    uint8_t row_offsets[] = {0x00, 0x40}; // Adresele memoriei pentru Rândul 1 și Rândul 2
+    uint8_t row_offsets[] = {0x00, 0x40}; 
     
-    if (row > 1) row = 1; // Protecție: avem doar 2 rânduri (0 și 1)
+    if (row > 1) row = 1; 
     
-    // Adresa finală se obține adunând 0x80 (comanda de setare adresă) + offset rând + coloană
     LCD_Command(0x80 | (col + row_offsets[row]));
 }

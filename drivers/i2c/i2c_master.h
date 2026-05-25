@@ -1,20 +1,17 @@
-#ifndef I2C_MASTER_H
-#define I2C_MASTER_H
+#ifndef I2C_SLAVE_H
+#define I2C_SLAVE_H
 
-#include <stdint.h>
+#ifndef F_CPU
+#define F_CPU 16000000UL
+#endif
 
-// Adresa de I2C pe care o va avea Arduino Nano (Slave)
-#define NANO_SLAVE_ADDR  0x3A
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
-// Inițializare magistrală I2C Master
-void I2C_Master_Init(void);
+// Expunem variabilele global pentru a fi vizibile în tot proiectul
+extern volatile uint8_t i2c_received_byte;
+extern volatile uint8_t i2c_data_ready;
 
-// Funcții de control de bază (Hardware TWI)
-void I2C_Start(void);
-void I2C_Stop(void);
-void I2C_Write(uint8_t data);
+void i2c_slave_init(uint8_t address);
 
-// Funcție utilitară pentru a trimite un singur octet direct către un Slave
-void I2C_Master_Send_Cmd(uint8_t slave_addr, uint8_t cmd);
-
-#endif // I2C_MASTER_H
+#endif /* I2C_SLAVE_H */
