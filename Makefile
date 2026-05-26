@@ -7,8 +7,8 @@ F_CPU = 16000000UL
 # Programmer Settings
 PROGRAMMER = arduino
 PORT = /dev/ttyUSB0
-BAUD = 57600
-#BAUD = 115200
+#BAUD = 57600
+BAUD = 115200
 
 # Board Selection (default to nano)
 BOARD ?= nano

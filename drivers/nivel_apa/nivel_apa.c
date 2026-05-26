@@ -1,33 +1,23 @@
 #include "nivel_apa.h"
-#include "drivers/gpio/gpio.h"
-#include "drivers/adc/adc.h"
-#include "bsp/uno.h"
-#include "utils/delay.h"
-
-// Definim pinii conform arhitecturii tale
-#define PIN_ALIMENTARE_SENZOR UNO_D7
-#define CANAL_ADC_APA         3 // Corespunde pinului A3
+#include "drivers/adc/adc.h" 
 
 void NivelApa_Init(void) {
-    // Setăm pinul D7 ca OUTPUT
-    GPIO_Init(PIN_ALIMENTARE_SENZOR, GPIO_OUTPUT);
-    
-    // Îl menținem LOW (oprit) la pornirea sistemului pentru a proteja senzorul
-    GPIO_Write(PIN_ALIMENTARE_SENZOR, GPIO_LOW);
+    // În modul Bare Metal pentru ATmega328P, pinii portului C (A0-A5) 
+    // sunt setați implicit ca intrări la resetare.
+    // Inițializarea registrelor ADC (ADCSRA, ADMUX) este gestionată de ADC_Init() în main.c.
 }
 
-uint16_t NivelApa_Citeste(void) {
-    // 1. Pornim curentul către senzor
-    GPIO_Write(PIN_ALIMENTARE_SENZOR, GPIO_HIGH);
+uint8_t NivelApa_Read(void) {
+    // Citim valoarea digitală convertită de pe canalul analogic 3 (Pinul A3)
+    uint16_t nivel_brut = ADC_Read(3); 
     
-    // 2. Așteptăm puțin să se stabilizeze tensiunea și curentul pe senzor
-    Delay(10);
-    
-    // 3. Efectuăm citirea analogică de pe pinul A3
-    uint16_t nivel = ADC_Read(CANAL_ADC_APA);
-    
-    // 4. Tăiem imediat alimentarea pentru a bloca procesul de electroliză (coroziune)
-    GPIO_Write(PIN_ALIMENTARE_SENZOR, GPIO_LOW);
-    
-    return nivel;
+    // PRAG DE CALIBRARE COMPENSAT (Histerezis software pentru zgomotul de masă)
+    // - Senzor complet uscat + pompe pornite (Ground Bounce) = ~150
+    // - Senzor în apă = ~500 - 600
+    // Alegem un prag de siguranță la 350 pentru a evita citirile false.
+    if (nivel_brut > 350) {
+        return 1; // APA PREZENTĂ (Sistemul poate iriga în siguranță)
+    } else {
+        return 0; // APA GOL (Rezervorul trebuie umplut, pompele se opresc)
+    }
 }

@@ -1,119 +1,131 @@
 #include <stdint.h>
 #include <avr/io.h>
+#include <stdlib.h>
 
-// Includem noul tău driver I2C Master (cu litere mici)
+// Căile către driverele tale Bare Metal
 #include "drivers/i2c/i2c_master.h"
-
-// Includem restul modulelor sistemului
-#include "drivers/adc/adc.h"
 #include "drivers/lcd/lcd.h"
-#include "drivers/buzzer/buzzer.h"
-#include "drivers/led/led.h"
-#include "drivers/nivel_apa/nivel_apa.h"
-#include "drivers/s_umiditate/s_umiditate.h"
-#include "utils/delay.h" // Folosim STRICT delay-ul tău customizat
+#include "drivers/adc/adc.h"
+#include "utils/delay.h"
 
-// Adresa Slave-ului (Nano), setată la 0x20 conform noilor tale fișiere
 #define SLAVE_ADDR 0x20
 
-// Configurația pentru pragurile senzorilor HW-390
-SUmiditateConfig_t config_sol;
+uint8_t stare_pompe[3] = {0, 0, 0};
+uint8_t toggle_alarma = 0; // Variabilă pentru a intercala (pulsa) LED-ul și Buzzer-ul
 
-/**
- * @brief Funcție helper locală pentru a transmite un pachet complet I2C curat.
- * Folosește funcțiile noi din i2c_master.c
- */
 void trimite_comanda_i2c(uint8_t comanda) {
-    i2c_master_start();                  // Condiție START
-    i2c_master_write(SLAVE_ADDR << 1);   // Trimitem adresa în regim SLA+W
-    i2c_master_write(comanda);           // Trimitem byte-ul de comandă
-    i2c_master_stop();                   // Condiție STOP
+    if (i2c_master_start() == 0) return;
+    if (i2c_master_write(SLAVE_ADDR << 1) == 0) return;
+    if (i2c_master_write(comanda) == 0) return;
+    i2c_master_stop();
 }
 
 int main(void) {
-    // ==========================================
-    // 1. INIȚIALIZARE HARDWARE (SETUP)
-    // ==========================================
-    ADC_Init();           
-    LCD_Init();           
-    i2c_master_init(); // Inițializarea din noul tău driver
-    Buzzer_Init();        
-    LED_Init();           
-    NivelApa_Init();      
-    
-    // Setăm pragurile de umiditate pentru sol
-    S_Umiditate_SetConfig(&config_sol, 350, 430, 480, 520);
+    // --- INIȚIALIZARE HARDWARE ---
+    ADC_Init(); 
+    LCD_Init(); 
+    i2c_master_init(); // Acum include și rezistențele de Pull-up pe care le-am adăugat
 
-    // Mesaj de pornire (acum aliniat corect datorită noului tău lcd.c)
-    LCD_SetCursor(0, 0);
-    LCD_String("Sistem Irigatie ");
-    LCD_SetCursor(1, 0);
-    LCD_String("Initializare... ");
-    
-    Delay(2000); 
-    LCD_Command(LCD_CMD_CLEAR_DISPLAY);
+    // Configurare pini pentru Alarme și Alimentare Senzor Apă direct din regiștri
+    // D6 (Buzzer) și D7 (VCC Senzor Apă) sunt pe PORTD [cite: 16, 17]
+    DDRD |= (1 << 6) | (1 << 7); 
+    // D8 (LED Alarma) este pe PORTB [cite: 17]
+    DDRB |= (1 << 0);               
 
-    // ==========================================
-    // 2. BUCLA PRINCIPALĂ
-    // ==========================================
+    // Asigurăm-ne că sunt oprite la pornire
+    PORTD &= ~((1 << 6) | (1 << 7)); // Buzzer OFF, Senzor Apă OPRIT
+    PORTB &= ~(1 << 0);
+
+    LCD_String("Sistem Activ...");
+    Delay(2000);
+    LCD_Command(0x01); // CLEAR
+
     while (1) {
-        
-        // --- A. VERIFICARE FAILSAFE (COMENTATĂ TEMPORAR PENTRU TEST) ---
-        /*
-        uint16_t nivel_apa = NivelApa_Citeste();
-        if (nivel_apa < 100) {
-            trimite_comanda_i2c(0x00); // Trimite comanda de oprire totală către Nano
-            Buzzer_On();
-            LED_On();
+        // --- 1. CITIRE ANTI-ELECTROLIZĂ SENZOR APĂ ---
+        PORTD |= (1 << 7);          // 1. Pornim alimentarea senzorului pe D7 [cite: 33]
+        Delay(10);                       // 2. Așteptăm scurt stabilizarea tensiunii
+        uint16_t apa_brut = ADC_Read(3); // 3. Citim nivelul de pe A3 [cite: 16]
+        PORTD &= ~(1 << 7);         // 4. Oprim imediat alimentarea pentru a preveni coroziunea [cite: 33]
+
+        // Verificăm dacă nivelul apei este sub pragul critic (prag de 100)
+        uint8_t apa_ok = (apa_brut > 100) ? 1 : 0; 
+
+        // --- 2. CITIRE SENZORI SOL ---
+        // Se citesc pinii analogici A0, A1, A2 
+        uint16_t s1 = ADC_Read(0);
+        uint16_t s2 = ADC_Read(1);
+        uint16_t s3 = ADC_Read(2);
+        uint16_t senzori[3] = {s1, s2, s3};
+
+        // --- 3. LOGICĂ DE CONTROL ȘI ALARMĂ ---
+        if (apa_ok == 1) {
+            // Avem apă, oprim alarmele hardware
+            PORTD &= ~(1 << 6); // Buzzer OFF
+            PORTB &= ~(1 << 0); // LED OFF
+
+            // Logica normală de irigare pentru fiecare din cele 3 pompe
+            for(uint8_t i = 0; i < 3; i++) {
+                if (senzori[i] > 600 && !stare_pompe[i]) {
+                    // Valori zecimale: 1 (0x01), 2 (0x02), 3 (0x03)
+                    trimite_comanda_i2c(i + 1); 
+                    stare_pompe[i] = 1;
+                } else if (senzori[i] < 550 && stare_pompe[i]) {
+                    // Valori zecimale: 17 (0x11), 18 (0x12), 19 (0x13)
+                    trimite_comanda_i2c(i + 17); 
+                    stare_pompe[i] = 0;
+                }
+            }
+
+            // Afișare stare normală pe LCD [cite: 14]
+            char b1[4], b2[4], b3[4];
+            itoa(s1/100, b1, 10); 
+            itoa(s2/100, b2, 10); 
+            itoa(s3/100, b3, 10);
+
             LCD_SetCursor(0, 0);
-            LCD_String("ALARMA CRITICA! ");
+            LCD_String("S1:"); LCD_String(b1);
+            LCD_String(" S2:"); LCD_String(b2);
+            LCD_String(" S3:"); LCD_String(b3);
+            
             LCD_SetCursor(1, 0);
-            LCD_String("Rezervor Gol!   ");
-            Delay(1000); 
-            continue;        
-        }
-        */
+            LCD_String("Apa:OK  ");
+            if (stare_pompe[0] || stare_pompe[1] || stare_pompe[2]) {
+                LCD_String(" IRIGA  ");
+            } else {
+                LCD_String(" STBY   ");
+            }
 
-        // Stare normală - oprim avertizările locale pe Uno
-        Buzzer_Off();
-        LED_Off();
+        } else {
+            // --- MOD AVARIE: LIPSĂ APĂ ---
+            
+            // 1. Oprim forțat toate pompele pentru a proteja echipamentul [cite: 29]
+            for(uint8_t i = 0; i < 3; i++) {
+                if (stare_pompe[i]) {
+                    trimite_comanda_i2c(i + 17);
+                    stare_pompe[i] = 0;
+                }
+            }
 
-        // --- B. CITIRE SENZORI REALI SOL (Canale ADC 0, 1, 2) ---
-        SUmiditateLevel_t planta_1 = S_Umiditate_GetLevel(0, &config_sol);
-        SUmiditateLevel_t planta_2 = S_Umiditate_GetLevel(1, &config_sol);
-        SUmiditateLevel_t planta_3 = S_Umiditate_GetLevel(2, &config_sol);
+            // 2. Pulsăm LED-ul și Buzzer-ul (Intermitent) [cite: 30]
+            if (toggle_alarma == 0) {
+                PORTD |= (1 << 6); // Buzzer ON
+                PORTB |= (1 << 0); // LED ON
+                toggle_alarma = 1;
+            } else {
+                PORTD &= ~(1 << 6); // Buzzer OFF
+                PORTB &= ~(1 << 0); // LED OFF
+                toggle_alarma = 0;
+            }
 
-        // --- C. LOGICĂ DE IRIGARE ȘI TRANSMISIE PRIN NOUL I2C ---
-        
-        // Control Releu / Pompa 1
-        if (planta_1 == S_UMIDITATE_VERY_LOW || planta_1 == S_UMIDITATE_LOW) {
-            trimite_comanda_i2c(0x01); 
-        } else if (planta_1 == S_UMIDITATE_HIGH || planta_1 == S_UMIDITATE_VERY_HIGH) {
-            trimite_comanda_i2c(0x11); 
-        }
-
-        // Control Releu / Pompa 2
-        if (planta_2 == S_UMIDITATE_VERY_LOW || planta_2 == S_UMIDITATE_LOW) {
-            trimite_comanda_i2c(0x02); 
-        } else if (planta_2 == S_UMIDITATE_HIGH || planta_2 == S_UMIDITATE_VERY_HIGH) {
-            trimite_comanda_i2c(0x12); 
-        }
-
-        // Control Releu / Pompa 3
-        if (planta_3 == S_UMIDITATE_VERY_LOW || planta_3 == S_UMIDITATE_LOW) {
-            trimite_comanda_i2c(0x03); 
-        } else if (planta_3 == S_UMIDITATE_HIGH || planta_3 == S_UMIDITATE_VERY_HIGH) {
-            trimite_comanda_i2c(0x13); 
+            // 3. Afișare mesaj critic pe LCD [cite: 30]
+            LCD_SetCursor(0, 0);
+            LCD_String("  SISTEM OPRIT  ");
+            LCD_SetCursor(1, 0);
+            LCD_String("ALARMA:LIPSA APA"); // [cite: 30]
         }
 
-        // --- D. AFIȘARE STATUS PE LCD ---
-        LCD_SetCursor(0, 0);
-        LCD_String("P1:OK P2:OK P3:OK"); 
-        LCD_SetCursor(1, 0);
-        LCD_String("Sistem: ACTIV   ");
-
-        Delay(2000); 
+        Delay(500); 
     }
-
+    
     return 0;
 }

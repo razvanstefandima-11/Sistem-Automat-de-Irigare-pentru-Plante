@@ -1,43 +1,39 @@
 #include "i2c_master.h"
+#include <avr/io.h> // Avem nevoie de această bibliotecă pentru a accesa PORTC
 
 void i2c_master_init(void) {
-    // Seteaza bit-rate-ul in registrul TWBR pe baza F_CPU si F_SCL
+    // --- LINIA MAGICĂ ---
+    // Activăm rezistențele interne de Pull-up pe pinii A4 (SDA) și A5 (SCL)
+    PORTC |= (1 << PORTC4) | (1 << PORTC5);
+
+    // Configurarea vitezei de transmisie
     TWBR = (uint8_t)((((F_CPU / F_SCL) / PRESCALER_1) - 16) / 2);
-    // Prescaler-ul este 00 in TWSR (Factorul de divizare = 1)
     TWSR &= ~((1<<TWPS1) | (1<<TWPS0));
 }
 
-void i2c_master_start(void) {
-    // Trimite conditia de START
+// Funcție internă de Timeout (aprox. 5ms la 16MHz)
+static uint8_t i2c_wait_timeout(void) {
+    uint16_t timeout = 10000; 
+    while (!(TWCR & (1<<TWINT))) {
+        timeout--;
+        if (timeout == 0) {
+            return 0; // 0 înseamnă că Slave-ul nu a răspuns (Timeout)
+        }
+    }
+    return 1; // 1 înseamnă Succes
+}
+
+uint8_t i2c_master_start(void) {
     TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
-    // Asteapta finalizarea transmisiei semnalului START
-    while (!(TWCR & (1<<TWINT)));
+    return i2c_wait_timeout();
 }
 
 void i2c_master_stop(void) {
-    // Trimite conditia de STOP
     TWCR = (1<<TWINT) | (1<<TWSTO) | (1<<TWEN);
 }
 
-void i2c_master_write(uint8_t data) {
-    // Incarca datele in registrul TWDR
+uint8_t i2c_master_write(uint8_t data) {
     TWDR = data;
-    // Clear TWINT pentru a incepe transmisia byte-ului
     TWCR = (1<<TWINT) | (1<<TWEN);
-    // Asteapta pana cand flag-ul de intrerupere se seteaza din nou (transmisie reusita)
-    while (!(TWCR & (1<<TWINT)));
-}
-
-uint8_t i2c_master_read_ack(void) {
-    // Citeste datele si trimite ACK catre Slave pentru a continua receptia
-    TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
-    while (!(TWCR & (1<<TWINT)));
-    return TWDR;
-}
-
-uint8_t i2c_master_read_nack(void) {
-    // Citeste ultimul byte de date fara a mai trimite ACK (NACK trimis catre Slave)
-    TWCR = (1<<TWINT) | (1<<TWEN);
-    while (!(TWCR & (1<<TWINT)));
-    return TWDR;
+    return i2c_wait_timeout();
 }

@@ -1,18 +1,18 @@
-#ifndef NIVEL_APA_H
-#define NIVEL_APA_H
+#ifndef NIVEL_APA_H_
+#define NIVEL_APA_H_
 
 #include <stdint.h>
 
 /**
- * @brief Inițializează pinul de alimentare pentru senzorul de apă.
+ * @brief Inițializează hardware-ul pentru senzorul de nivel de apă.
+ * Deoarece senzorul este analogic, pinii ADC sunt configurați global.
  */
 void NivelApa_Init(void);
 
 /**
- * @brief Citește nivelul apei din rezervorul de încălzire al camerei.
- * Alimentează senzorul temporar, face conversia ADC, apoi taie alimentarea.
- * * @return uint16_t Valoarea brută (0-1023) a nivelului de apă.
+ * @brief Citește starea senzorului de nivel de apă de pe pinul A3.
+ * @return 1 dacă există apă în rezervor (OK), 0 dacă rezervorul este gol.
  */
-uint16_t NivelApa_Citeste(void);
+uint8_t NivelApa_Read(void);
 
-#endif // NIVEL_APA_H
+#endif /* NIVEL_APA_H_ */
