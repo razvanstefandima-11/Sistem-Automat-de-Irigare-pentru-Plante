@@ -7,8 +7,8 @@ F_CPU = 16000000UL
 # Programmer Settings
 PROGRAMMER = arduino
 PORT = /dev/ttyUSB0
-BAUD = 57600
-#BAUD = 115200
+#BAUD = 57600
+BAUD = 115200
 
 # Board Selection (default to nano)
 BOARD ?= nano
@@ -24,7 +24,7 @@ BINDIR = bin
 
 # Compiler Flags
 CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall -Wextra -std=gnu99
-CFLAGS += -I. -Idrivers/gpio -Idrivers/button -Idrivers/interrupt -Idrivers/timer -Idrivers/eeprom -Idrivers/adc -Ibsp -Iutils
+CFLAGS += -I. -Idrivers/gpio -Idrivers/button -Idrivers/interrupt -Idrivers/timer -Idrivers/eeprom -Idrivers/adc -Idrivers/usart -Ibsp -Iutils
 
 ifeq ($(BOARD), nano)
     CFLAGS += -DBOARD_NANO
@@ -35,7 +35,7 @@ else
 endif
 
 # Source Files
-SRC = src/main.c drivers/gpio/gpio.c drivers/adc/adc.c drivers/lcd/lcd.c drivers/button/button.c drivers/i2c/i2c_master.c drivers/i2c/i2c_slave.c drivers/buzzer/buzzer.c drivers/led/led.c drivers/nivel_apa/nivel_apa.c drivers/s_umiditate/s_umiditate.c drivers/pompe/pompe.c drivers/interrupt/external_interrupt.c drivers/timer/timer0.c drivers/timer/timer1.c drivers/timer/timer2.c drivers/pwm/pwm.c drivers/eeprom/eeprom.c utils/delay.c
+SRC = src/main.c drivers/gpio/gpio.c drivers/adc/adc.c drivers/lcd/lcd.c drivers/usart/usart.c drivers/button/button.c drivers/i2c/i2c_master.c drivers/i2c/i2c_slave.c drivers/buzzer/buzzer.c drivers/led/led.c drivers/nivel_apa/nivel_apa.c drivers/s_umiditate/s_umiditate.c drivers/pompe/pompe.c drivers/interrupt/external_interrupt.c drivers/timer/timer0.c drivers/timer/timer1.c drivers/timer/timer2.c drivers/pwm/pwm.c drivers/eeprom/eeprom.c utils/delay.c
 
 # Object Files
 # Replace .c extension with .o and prepend OBJDIR, keeping directory structure
@@ -50,13 +50,22 @@ all: directories $(TARGET).hex
 directories:
 	@mkdir -p $(BINDIR)
 	@mkdir -p $(OBJDIR)/src
-	@mkdir -p $(OBJDIR)/drivers/gpio
-	@mkdir -p $(OBJDIR)/drivers/interrupt
-	@mkdir -p $(OBJDIR)/drivers/timer
-	@mkdir -p $(OBJDIR)/drivers/eeprom
-	@mkdir -p $(OBJDIR)/drivers/adc
 	@mkdir -p $(OBJDIR)/utils
-
+	@mkdir -p $(OBJDIR)/drivers/adc
+	@mkdir -p $(OBJDIR)/drivers/usart
+	@mkdir -p $(OBJDIR)/drivers/button
+	@mkdir -p $(OBJDIR)/drivers/buzzer
+	@mkdir -p $(OBJDIR)/drivers/eeprom
+	@mkdir -p $(OBJDIR)/drivers/gpio
+	@mkdir -p $(OBJDIR)/drivers/i2c
+	@mkdir -p $(OBJDIR)/drivers/interrupt
+	@mkdir -p $(OBJDIR)/drivers/lcd
+	@mkdir -p $(OBJDIR)/drivers/led
+	@mkdir -p $(OBJDIR)/drivers/nivel_apa
+	@mkdir -p $(OBJDIR)/drivers/pompe
+	@mkdir -p $(OBJDIR)/drivers/pwm
+	@mkdir -p $(OBJDIR)/drivers/s_umiditate
+	@mkdir -p $(OBJDIR)/drivers/timers
 $(TARGET).elf: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
