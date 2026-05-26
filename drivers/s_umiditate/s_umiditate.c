@@ -13,24 +13,23 @@ void S_Umiditate_SetConfig(SUmiditateConfig_t* config, uint16_t th_vh, uint16_t 
 }
 
 SUmiditateLevel_t S_Umiditate_GetLevel(uint8_t adc_channel, SUmiditateConfig_t* config) {
-    // Citim valoarea brută a senzorului de pe canalul ADC dorit
     uint16_t pv = ADC_Read(adc_channel);
     
-    // Trecem valoarea prin filtrul de praguri 
-    // Atenție: la HW-390 valorile mici înseamnă umiditate mare!
+    // Optimizare: Eliminarea condițiilor redundante.
+    // Compilatorul evaluează secvențial; dacă trece de primul IF, 
+    // valoarea este deja strict mai mare decât pragul anterior.
     if (pv <= config->very_high_threshold) {
         return S_UMIDITATE_VERY_HIGH;
     } 
-    else if (pv > config->very_high_threshold && pv <= config->high_threshold) {
+    else if (pv <= config->high_threshold) {
         return S_UMIDITATE_HIGH;
     } 
-    else if (pv > config->high_threshold && pv <= config->medium_threshold) {
+    else if (pv <= config->medium_threshold) {
         return S_UMIDITATE_MEDIUM;
     } 
-    else if (pv > config->medium_threshold && pv <= config->low_threshold) {
+    else if (pv <= config->low_threshold) {
         return S_UMIDITATE_LOW;
     } 
-    else {
-        return S_UMIDITATE_VERY_LOW;
-    }
+    
+    return S_UMIDITATE_VERY_LOW;
 }

@@ -2,12 +2,12 @@
 #include "drivers/gpio/gpio.h"
 #include "bsp/uno.h"
 
-// Am stabilit că LED-ul de alarmă vizuală stă pe D8
+// Maparea hardware: LED-ul de alarmă vizuală stă pe pinul D8 (PB0)
 #define PIN_LED_ALARMA UNO_D8 
 
 void LED_Init(void) {
     GPIO_Init(PIN_LED_ALARMA, GPIO_OUTPUT);
-    GPIO_Write(PIN_LED_ALARMA, GPIO_LOW);
+    GPIO_Write(PIN_LED_ALARMA, GPIO_LOW); // Asigurăm starea inițială stinsă
 }
 
 void LED_On(void) {
