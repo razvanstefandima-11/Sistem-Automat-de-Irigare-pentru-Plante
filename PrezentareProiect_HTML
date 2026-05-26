@@ -19,6 +19,7 @@
             --text-muted: #8b949e;
             --accent-green: #00ff66;
             --accent-amber: #ffb000;
+            --accent-blue: #58a6ff;
             --font-display: 'Share Tech Mono', monospace;
             --font-code: 'JetBrains Mono', monospace;
         }
@@ -42,7 +43,6 @@
             font-family: var(--font-code);
             line-height: 1.6;
             overflow-x: hidden;
-            /* Fundalul static păstrat ca fallback */
             background-image: 
                 linear-gradient(rgba(0, 255, 102, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 102, 0.03) 1px, transparent 1px);
@@ -60,18 +60,13 @@
 
         .container { 
             max-width: 1000px; margin: 0 auto; padding: 0 20px; 
-            position: relative; z-index: 1; /* Peste particule */
+            position: relative; z-index: 1; 
         }
 
         /* ================= PARTICLES BACKGROUND ================= */
         #particles-js {
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-            top: 0;
-            left: 0;
-            z-index: 0;
-            pointer-events: none; /* Permite click-ul prin particule */
+            position: fixed; width: 100vw; height: 100vh;
+            top: 0; left: 0; z-index: 0; pointer-events: none; 
         }
 
         /* ================= TOOLTIPS ================= */
@@ -83,54 +78,29 @@
             transition: 0.3s;
         }
 
-        .tech-word:hover {
-            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
-        }
+        .tech-word:hover { text-shadow: 0 0 8px rgba(0, 255, 102, 0.5); }
 
         .tech-word::after {
             content: attr(data-tooltip);
-            position: absolute;
-            bottom: 130%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0d1117;
-            border: 1px solid var(--accent-green);
-            color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            width: max-content;
-            max-width: 250px;
-            white-space: normal;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s ease;
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.1);
-            z-index: 100;
-            pointer-events: none;
-            line-height: 1.4;
+            position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+            background: #0d1117; border: 1px solid var(--accent-green);
+            color: var(--text-main); padding: 8px 12px; border-radius: 4px;
+            font-size: 0.85rem; width: max-content; max-width: 250px;
+            white-space: normal; opacity: 0; visibility: hidden; transition: 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.1); z-index: 100;
+            pointer-events: none; line-height: 1.4;
         }
 
-        /* Mica sageata a tooltip-ului */
         .tech-word::before {
-            content: '';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 6px;
-            border-style: solid;
+            content: ''; position: absolute; bottom: 100%; left: 50%;
+            transform: translateX(-50%); border-width: 6px; border-style: solid;
             border-color: var(--accent-green) transparent transparent transparent;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s ease;
-            z-index: 100;
-            pointer-events: none;
+            opacity: 0; visibility: hidden; transition: 0.3s ease;
+            z-index: 100; pointer-events: none;
         }
 
         .tech-word:hover::after, .tech-word:hover::before {
-            opacity: 1;
-            visibility: visible;
+            opacity: 1; visibility: visible;
         }
 
         /* ================= ANIMATIONS & EFFECTS ================= */
@@ -153,11 +123,52 @@
             100% { text-shadow: 2px 0 var(--accent-amber), -2px 0 var(--accent-green); }
         }
 
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        @keyframes drip {
+            0% { transform: translateY(-5px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(20px); opacity: 0; }
+        }
+
         .scanline {
             position: fixed; top: 0; left: 0; width: 100%; height: 10px;
             background: rgba(0, 255, 102, 0.1); opacity: 0.4;
             pointer-events: none; animation: scanline 8s linear infinite; z-index: 9999;
         }
+
+        /* ================= ANIMATED PUMP WIDGET ================= */
+        .pump-widget {
+            position: fixed; bottom: 30px; right: 30px;
+            background: rgba(13, 17, 23, 0.85); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 12px 20px; display: flex; align-items: center; gap: 15px;
+            backdrop-filter: blur(8px); z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+        
+        .pump-widget:hover { border-color: var(--accent-blue); }
+        
+        .pump-icon {
+            width: 36px; height: 36px; border: 2px solid var(--text-muted);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            position: relative; background: #161b22;
+        }
+        
+        .impeller {
+            width: 18px; height: 18px; border: 2px dashed var(--accent-blue);
+            border-radius: 50%; animation: spin 1.5s linear infinite;
+        }
+        
+        .water-drop {
+            width: 6px; height: 10px; background: var(--accent-blue); 
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: absolute; bottom: -18px; animation: drip 1.2s infinite ease-in;
+        }
+        
+        .pump-info { display: flex; flex-direction: column; }
+        .pump-title { font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;}
+        .pump-status { font-weight: bold; color: var(--accent-blue); font-size: 0.95rem; display: flex; align-items: center; gap: 5px;}
+        .status-dot { width: 8px; height: 8px; background: var(--accent-blue); border-radius: 50%; box-shadow: 0 0 8px var(--accent-blue); }
 
         /* ================= HERO SECTION ================= */
         .hero {
@@ -212,25 +223,20 @@
         .spec-item h3 { font-size: 1.2rem; margin-bottom: 10px; color: var(--text-main); }
         .spec-item p { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* ================= FLORA DATABASE ================= */
+        /* ================= FLORA DATABASE (FĂRĂ IMAGINI) ================= */
         .flora-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px; margin-top: 20px;
         }
         .flora-card {
             background: rgba(22, 27, 34, 0.85); border: 1px solid var(--border-color);
+            border-top: 3px solid var(--accent-green); /* Înlocuiește vizual spațiul imaginii */
             border-radius: 4px; overflow: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px);
         }
         .flora-card:hover { border-color: var(--accent-amber); box-shadow: 0 0 15px rgba(255, 176, 0, 0.15); }
-        .flora-img {
-            width: 100%; height: 180px; background-color: #21262d;
-            object-fit: cover; border-bottom: 2px dashed var(--border-color);
-            filter: grayscale(80%) contrast(120%); transition: 0.3s;
-        }
-        .flora-card:hover .flora-img { filter: grayscale(0%) contrast(100%); }
-        .flora-details { padding: 20px; }
+        .flora-details { padding: 25px; }
         .flora-details h3 {
-            color: var(--text-main); font-size: 1.4rem; margin-bottom: 15px;
+            color: var(--text-main); font-size: 1.4rem; margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
         }
         .badge {
@@ -240,7 +246,7 @@
         }
         .param-row {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; font-size: 0.85rem; border-bottom: 1px dotted #30363d; padding-bottom: 4px;
+            margin-bottom: 12px; font-size: 0.85rem; border-bottom: 1px dotted #30363d; padding-bottom: 6px;
         }
         .param-label { color: var(--text-muted); }
         .param-value { color: var(--accent-amber); font-weight: bold; letter-spacing: 1px; }
@@ -313,6 +319,8 @@
             .param-row { flex-direction: column; align-items: flex-start; }
             .bom-table { display: block; overflow-x: auto; }
             .tech-word::after { max-width: 200px; font-size: 0.75rem; }
+            .pump-widget { bottom: 15px; right: 15px; padding: 10px; }
+            .pump-title { display: none; }
         }
     </style>
 </head>
@@ -321,7 +329,18 @@
     <div id="particles-js"></div>
     <div class="scanline"></div>
 
-    <div class="container">
+    <aside class="pump-widget">
+        <div class="pump-icon">
+            <div class="impeller"></div>
+            <div class="water-drop"></div>
+        </div>
+        <div class="pump-info">
+            <span class="pump-title">Canal Irigare M1</span>
+            <span class="pump-status"><span class="status-dot"></span> POMPĂ ACTIVĂ</span>
+        </div>
+    </aside>
+
+    <main class="container">
         <header class="hero reveal">
             <div class="terminal-header">victor@ubuntu:~/projects/smart-irrigation$ ./run_presentation.sh</div>
             <h1 id="typewriter">Sistem_Irigare_Automatizată</h1>
@@ -371,44 +390,41 @@
             <p style="color: var(--text-muted); margin-bottom: 30px;">Profiluri de irigare (EEPROM mapped) pentru flora de apartament.</p>
             
             <div class="flora-grid">
-                <div class="flora-card">
-                    <img src="https://images.unsplash.com/photo-1599368535041-9fb91d2551ec?auto=format&fit=crop&w=600&q=80" alt="Mușcată" class="flora-img">
+                <article class="flora-card">
                     <div class="flora-details">
                         <h3>Mușcată (Pelargonium) <span class="badge">ID: 0x01</span></h3>
                         <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[████░░░░░░] 40%</span></div>
                         <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">400 - 600</span></div>
                         <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Directă</span></div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
-                            >_ Risc de putrezire a rădăcinilor la ADC > 800. Se irigă abundent, apoi se așteaptă uscarea solului.
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            >_ Risc de putrezire a rădăcinilor la ADC > 800. Se irigă abundent, apoi se așteaptă uscarea completă a stratului superior al solului.
                         </p>
                     </div>
-                </div>
+                </article>
 
-                <div class="flora-card">
-                    <img src="https://images.unsplash.com/photo-1612363064977-18b76c8c105c?auto=format&fit=crop&w=600&q=80" alt="Ficus" class="flora-img">
+                <article class="flora-card">
                     <div class="flora-details">
-                        <h3>Ficus (Elastica) <span class="badge">ID: 0x02</span></h3>
-                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[███████░░░] 70%</span></div>
-                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">550 - 750</span></div>
-                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Indirectă</span></div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
-                            >_ Preferă umiditate constantă. Sistemul activează pompa via GPIO la scăderea sub pragul de 550 ADC.
+                        <h3>Trandafir (Rosa) <span class="badge">ID: 0x02</span></h3>
+                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[██████▌░░░] 65%</span></div>
+                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">450 - 680</span></div>
+                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Directă/Intensă</span></div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            >_ Sensibil la uscăciune, preferă o udare constantă dar fără exces. Activare pompă în impulsuri PWM lente pentru a nu tasa solul.
                         </p>
                     </div>
-                </div>
+                </article>
 
-                <div class="flora-card">
-                    <img src="https://images.unsplash.com/photo-1606887551061-6d7249b5526e?auto=format&fit=crop&w=600&q=80" alt="Violeta" class="flora-img">
+                <article class="flora-card">
                     <div class="flora-details">
-                        <h3>Violeta de Parma <span class="badge">ID: 0x03</span></h3>
-                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[██████░░░░] 60%</span></div>
-                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">500 - 650</span></div>
-                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Semi-umbră</span></div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
-                            >_ Irigare doar la nivelul solului. Execuție pompă în reprize scurte pentru a evita suprasaturarea bruscă.
+                        <h3>Orhidee (Phalaenopsis) <span class="badge">ID: 0x03</span></h3>
+                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[██░░░░░░░░] 20%</span></div>
+                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">250 - 400</span></div>
+                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Filtrată/Indirectă</span></div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            >_ Rădăcinile necesită aerare masivă. Sistemul aplică o peliculă minimă de apă exclusiv când substratul este complet uscat.
                         </p>
                     </div>
-                </div>
+                </article>
             </div>
         </section>
 
@@ -502,7 +518,7 @@ avr-objcopy -O ihex build/firmware.elf build/firmware.hex
                 Dezvoltat cu pasiune pentru sistemele embedded.
             </p>
         </footer>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
@@ -510,7 +526,7 @@ avr-objcopy -O ihex build/firmware.elf build/firmware.hex
         particlesJS("particles-js", {
             "particles": {
                 "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
-                "color": { "value": "#00ff66" }, /* Verde accent */
+                "color": { "value": "#00ff66" },
                 "shape": { "type": "circle" },
                 "opacity": { "value": 0.3, "random": false },
                 "size": { "value": 2, "random": true },
