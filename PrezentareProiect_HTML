@@ -42,6 +42,7 @@
             font-family: var(--font-code);
             line-height: 1.6;
             overflow-x: hidden;
+            /* Fundalul static păstrat ca fallback */
             background-image: 
                 linear-gradient(rgba(0, 255, 102, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 102, 0.03) 1px, transparent 1px);
@@ -57,7 +58,80 @@
         a { text-decoration: none; color: var(--accent-green); transition: 0.3s; }
         a:hover { color: var(--accent-amber); text-shadow: 0 0 8px rgba(255,176,0,0.5); }
 
-        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+        .container { 
+            max-width: 1000px; margin: 0 auto; padding: 0 20px; 
+            position: relative; z-index: 1; /* Peste particule */
+        }
+
+        /* ================= PARTICLES BACKGROUND ================= */
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none; /* Permite click-ul prin particule */
+        }
+
+        /* ================= TOOLTIPS ================= */
+        .tech-word {
+            position: relative;
+            cursor: help;
+            color: var(--accent-green);
+            border-bottom: 1px dashed rgba(0, 255, 102, 0.5);
+            transition: 0.3s;
+        }
+
+        .tech-word:hover {
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+        }
+
+        .tech-word::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0d1117;
+            border: 1px solid var(--accent-green);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            width: max-content;
+            max-width: 250px;
+            white-space: normal;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.1);
+            z-index: 100;
+            pointer-events: none;
+            line-height: 1.4;
+        }
+
+        /* Mica sageata a tooltip-ului */
+        .tech-word::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--accent-green) transparent transparent transparent;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .tech-word:hover::after, .tech-word:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
 
         /* ================= ANIMATIONS & EFFECTS ================= */
         .reveal {
@@ -106,10 +180,11 @@
 
         .btn {
             display: inline-block; padding: 12px 24px;
-            border: 1px solid var(--accent-green); background: transparent;
+            border: 1px solid var(--accent-green); background: rgba(10, 10, 12, 0.8);
             color: var(--accent-green); font-family: var(--font-display);
             font-size: 1.1rem; text-transform: uppercase; cursor: pointer;
             transition: all 0.3s ease; position: relative; overflow: hidden;
+            backdrop-filter: blur(4px);
         }
 
         .btn:hover {
@@ -130,7 +205,7 @@
         /* ================= GRID SPECS ================= */
         .specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .spec-item {
-            background: var(--surface-color); padding: 20px;
+            background: rgba(22, 27, 34, 0.85); padding: 20px; backdrop-filter: blur(5px);
             border-left: 3px solid var(--border-color); transition: 0.3s;
         }
         .spec-item:hover { border-left-color: var(--accent-amber); transform: translateX(5px); }
@@ -143,8 +218,8 @@
             gap: 30px; margin-top: 20px;
         }
         .flora-card {
-            background: var(--surface-color); border: 1px solid var(--border-color);
-            border-radius: 4px; overflow: hidden; transition: all 0.3s ease;
+            background: rgba(22, 27, 34, 0.85); border: 1px solid var(--border-color);
+            border-radius: 4px; overflow: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px);
         }
         .flora-card:hover { border-color: var(--accent-amber); box-shadow: 0 0 15px rgba(255, 176, 0, 0.15); }
         .flora-img {
@@ -173,8 +248,8 @@
         /* ================= ARCHITECTURE & DRIVERS ================= */
         .arch-container {
             display: flex; align-items: center; justify-content: space-between;
-            background: var(--surface-color); padding: 40px; border: 1px solid var(--border-color);
-            border-radius: 4px; flex-wrap: wrap; gap: 20px;
+            background: rgba(22, 27, 34, 0.85); padding: 40px; border: 1px solid var(--border-color);
+            border-radius: 4px; flex-wrap: wrap; gap: 20px; backdrop-filter: blur(5px);
         }
         .node {
             flex: 1; min-width: 200px; text-align: center; padding: 30px;
@@ -189,7 +264,8 @@
         /* ================= BILL OF MATERIALS (BOM) ================= */
         .bom-table {
             width: 100%; border-collapse: collapse; margin-top: 20px;
-            background: var(--surface-color); border: 1px solid var(--border-color);
+            background: rgba(22, 27, 34, 0.85); border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
         }
         .bom-table th, .bom-table td {
             padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color);
@@ -200,7 +276,10 @@
 
         /* ================= ROADMAP ================= */
         .roadmap-list { list-style: none; padding: 0; }
-        .roadmap-list li { margin-bottom: 15px; padding: 15px; background: var(--surface-color); border-left: 2px solid #30363d; }
+        .roadmap-list li { 
+            margin-bottom: 15px; padding: 15px; background: rgba(22, 27, 34, 0.85); 
+            border-left: 2px solid #30363d; backdrop-filter: blur(5px);
+        }
         .roadmap-list li.done { border-left-color: var(--accent-green); }
         .roadmap-list li.pending { border-left-color: var(--accent-amber); }
         .status { font-weight: bold; margin-right: 10px; }
@@ -233,18 +312,20 @@
             .connection { transform: rotate(90deg); margin: 20px 0; }
             .param-row { flex-direction: column; align-items: flex-start; }
             .bom-table { display: block; overflow-x: auto; }
+            .tech-word::after { max-width: 200px; font-size: 0.75rem; }
         }
     </style>
 </head>
 <body>
 
+    <div id="particles-js"></div>
     <div class="scanline"></div>
 
     <div class="container">
         <header class="hero reveal">
             <div class="terminal-header">victor@ubuntu:~/projects/smart-irrigation$ ./run_presentation.sh</div>
             <h1 id="typewriter">Sistem_Irigare_Automatizată</h1>
-            <p>Arhitectură Master-Slave. Implementare integrală în C bare-metal. Manipulare directă a regiștrilor AVR, fără framework-uri sau librării terțe.</p>
+            <p>Arhitectură Master-Slave. Implementare integrală în C <span class="tech-word" data-tooltip="Programare la nivel de regiștri hardware, fără sistem de operare sau framework-uri specifice precum Arduino IDE.">bare-metal</span>. Manipulare directă a regiștrilor AVR.</p>
             <div>
                 <a href="https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante" target="_blank" class="btn">View Source pe GitHub_</a>
             </div>
@@ -255,11 +336,11 @@
             <div class="specs-grid">
                 <div class="spec-item">
                     <h3>MCU Principal</h3>
-                    <p>Arduino Uno (ATmega328P). Rol de Master. Gestionează logica decizională, interfața I2C și senzorul ultrasonic.</p>
+                    <p>Arduino Uno (ATmega328P). Rol de Master. Gestionează logica decizională, interfața <span class="tech-word" data-tooltip="Inter-Integrated Circuit. Protocol de comunicație serială sincronă pe 2 fire (SDA și SCL).">I2C</span> și senzorul ultrasonic.</p>
                 </div>
                 <div class="spec-item">
                     <h3>MCU Secundar</h3>
-                    <p>Arduino Nano. Rol de Slave. Achiziție date senzori (ADC) și acționare elemente de execuție (GPIO/Pompe).</p>
+                    <p>Arduino Nano. Rol de Slave. Achiziție date senzori (<span class="tech-word" data-tooltip="Analog-to-Digital Converter. Modulul HW care convertește tensiunea analogică în valori digitale (0-1023).">ADC</span>) și acționare elemente de execuție (GPIO/Pompe).</p>
                 </div>
             </div>
         </section>
@@ -270,11 +351,11 @@
                 <div class="node">
                     <h3>MASTER (Uno)</h3>
                     <p style="color:var(--text-muted); font-size:0.9em; margin-top:10px;">
-                        [Logic Control]<br>Display LCD (I2C)<br>Ultrasonic (Timer)<br>EEPROM
+                        [Logic Control]<br>Display LCD (I2C)<br>Ultrasonic (<span class="tech-word" data-tooltip="Modul hardware dedicat generării de baze de timp și măsurării precise a impulsurilor.">Timer</span>)<br><span class="tech-word" data-tooltip="Electrically Erasable Programmable Read-Only Memory. Memorie non-volatilă utilizată pentru salvarea pragurilor la reset.">EEPROM</span>
                     </p>
                 </div>
                 <div class="connection">
-                    <span>Protocol I2C/TWI</span><span class="arrow">⇄</span><span>Polling</span>
+                    <span>Protocol I2C/TWI</span><span class="arrow">⇄</span><span><span class="tech-word" data-tooltip="Tehnică de interogare periodică (în buclă) a stării unui modul/senzor, în contrast cu folosirea întreruperilor.">Polling</span></span>
                 </div>
                 <div class="node">
                     <h3>SLAVE (Nano)</h3>
@@ -408,7 +489,7 @@ avr-objcopy -O ihex build/firmware.elf build/firmware.hex
 
 <span class="comment"># Upload via avrdude</span>
 <span class="prompt">victor@ubuntu:~$</span> make flash
-avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firmware.hex
+<span class="tech-word" data-tooltip="Program din linia de comandă utilizat pentru a descărca (flash) firmware-ul precompilat direct în memoria flash a microcontrolerelor AVR.">avrdude</span> -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firmware.hex
 <span style="color:var(--accent-green)">[SUCCESS] Flash complete.</span>
 </pre>
                 </div>
@@ -423,7 +504,49 @@ avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firm
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
+        /* Configurare Particles.js (Efect PCB) */
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#00ff66" }, /* Verde accent */
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.3, "random": false },
+                "size": { "value": 2, "random": true },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#00ff66",
+                    "opacity": 0.15,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 1.5,
+                    "direction": "none",
+                    "random": true,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                }
+            },
+            "interactivity": {
+                "detect_on": "window",
+                "events": {
+                    "onhover": { "enable": true, "mode": "grab" },
+                    "onclick": { "enable": true, "mode": "push" },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": { "distance": 180, "line_linked": { "opacity": 0.4 } },
+                    "push": { "particles_nb": 3 }
+                }
+            },
+            "retina_detect": true
+        });
+
+        /* Efect de Typewriter */
         const titleElement = document.getElementById('typewriter');
         const text = titleElement.innerText;
         titleElement.innerText = '';
@@ -439,6 +562,7 @@ avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firm
         
         window.onload = () => { setTimeout(typeWriter, 500); };
 
+        /* Scroll Reveal */
         const revealElements = document.querySelectorAll('.reveal');
         const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
 
