@@ -23,6 +23,16 @@
             --font-code: 'JetBrains Mono', monospace;
         }
 
+        /* ================= SCROLLBAR CUSTOM ================= */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--surface-color); 
+            border: 1px solid var(--accent-green); 
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 102, 0.2); }
+
         /* ================= RESET & BASE ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -47,93 +57,65 @@
         a { text-decoration: none; color: var(--accent-green); transition: 0.3s; }
         a:hover { color: var(--accent-amber); text-shadow: 0 0 8px rgba(255,176,0,0.5); }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
 
-        /* ================= ANIMATIONS ================= */
+        /* ================= ANIMATIONS & EFFECTS ================= */
         .reveal {
-            opacity: 0;
-            transform: translateY(30px);
+            opacity: 0; transform: translateY(30px);
             transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
         }
         .reveal.active { opacity: 1; transform: translateY(0); }
 
-        @keyframes blinkCursor {
-            50% { border-right-color: transparent; }
-        }
+        @keyframes blinkCursor { 50% { border-right-color: transparent; } }
         
         @keyframes scanline {
             0% { transform: translateY(-100%); }
             100% { transform: translateY(100vh); }
         }
 
-        /* Scanline effect */
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 var(--accent-amber), -2px 0 var(--accent-green); }
+            50% { text-shadow: -2px 0 var(--accent-amber), 2px 0 var(--accent-green); }
+            100% { text-shadow: 2px 0 var(--accent-amber), -2px 0 var(--accent-green); }
+        }
+
         .scanline {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 10px;
-            background: rgba(0, 255, 102, 0.1);
-            opacity: 0.4;
-            pointer-events: none;
-            animation: scanline 8s linear infinite;
-            z-index: 9999;
+            position: fixed; top: 0; left: 0; width: 100%; height: 10px;
+            background: rgba(0, 255, 102, 0.1); opacity: 0.4;
+            pointer-events: none; animation: scanline 8s linear infinite; z-index: 9999;
         }
 
         /* ================= HERO SECTION ================= */
         .hero {
-            min-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            border-bottom: 1px solid var(--border-color);
+            min-height: 90vh; display: flex; flex-direction: column;
+            justify-content: center; border-bottom: 1px solid var(--border-color);
             position: relative;
         }
 
-        .terminal-header {
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
+        .terminal-header { color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem; }
 
         .hero h1 {
-            font-size: clamp(2rem, 5vw, 4rem);
-            margin-bottom: 20px;
+            font-size: clamp(2rem, 5vw, 4rem); margin-bottom: 20px;
             text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
             border-right: 3px solid var(--accent-green);
-            white-space: nowrap;
-            overflow: hidden;
-            width: fit-content;
+            white-space: nowrap; overflow: hidden; width: fit-content;
             animation: blinkCursor 0.8s step-end infinite;
         }
 
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            max-width: 700px;
-            margin-bottom: 40px;
-        }
+        .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin-bottom: 40px; }
 
         .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            border: 1px solid var(--accent-green);
-            background: transparent;
-            color: var(--accent-green);
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            display: inline-block; padding: 12px 24px;
+            border: 1px solid var(--accent-green); background: transparent;
+            color: var(--accent-green); font-family: var(--font-display);
+            font-size: 1.1rem; text-transform: uppercase; cursor: pointer;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
         }
 
         .btn:hover {
-            background: var(--accent-green);
-            color: var(--bg-color);
+            background: rgba(0, 255, 102, 0.1);
             box-shadow: 0 0 20px rgba(0, 255, 102, 0.4);
+            animation: glitch 0.2s linear infinite;
         }
 
         /* ================= SECTIONS ================= */
@@ -143,117 +125,103 @@
             content: ''; position: absolute; bottom: -5px; left: 0;
             width: 50%; height: 2px; background: var(--accent-green);
         }
+        .section-title:hover { animation: glitch 0.3s linear infinite; cursor: crosshair; }
 
         /* ================= GRID SPECS ================= */
-        .specs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
+        .specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .spec-item {
-            background: var(--surface-color);
-            padding: 20px;
-            border-left: 3px solid var(--border-color);
-            transition: 0.3s;
+            background: var(--surface-color); padding: 20px;
+            border-left: 3px solid var(--border-color); transition: 0.3s;
         }
-
-        .spec-item:hover {
-            border-left-color: var(--accent-amber);
-            transform: translateX(5px);
-        }
-
+        .spec-item:hover { border-left-color: var(--accent-amber); transform: translateX(5px); }
         .spec-item h3 { font-size: 1.2rem; margin-bottom: 10px; color: var(--text-main); }
         .spec-item p { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* ================= ARCHITECTURE ================= */
+        /* ================= FLORA DATABASE ================= */
+        .flora-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px; margin-top: 20px;
+        }
+        .flora-card {
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: 4px; overflow: hidden; transition: all 0.3s ease;
+        }
+        .flora-card:hover { border-color: var(--accent-amber); box-shadow: 0 0 15px rgba(255, 176, 0, 0.15); }
+        .flora-img {
+            width: 100%; height: 180px; background-color: #21262d;
+            object-fit: cover; border-bottom: 2px dashed var(--border-color);
+            filter: grayscale(80%) contrast(120%); transition: 0.3s;
+        }
+        .flora-card:hover .flora-img { filter: grayscale(0%) contrast(100%); }
+        .flora-details { padding: 20px; }
+        .flora-details h3 {
+            color: var(--text-main); font-size: 1.4rem; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .badge {
+            font-size: 0.75rem; padding: 3px 8px; background: rgba(0, 255, 102, 0.1);
+            color: var(--accent-green); border: 1px solid var(--accent-green);
+            border-radius: 12px; font-family: var(--font-code);
+        }
+        .param-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; font-size: 0.85rem; border-bottom: 1px dotted #30363d; padding-bottom: 4px;
+        }
+        .param-label { color: var(--text-muted); }
+        .param-value { color: var(--accent-amber); font-weight: bold; letter-spacing: 1px; }
+
+        /* ================= ARCHITECTURE & DRIVERS ================= */
         .arch-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--surface-color);
-            padding: 40px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            flex-wrap: wrap;
-            gap: 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--surface-color); padding: 40px; border: 1px solid var(--border-color);
+            border-radius: 4px; flex-wrap: wrap; gap: 20px;
         }
-
         .node {
-            flex: 1; min-width: 200px;
-            text-align: center;
-            padding: 30px;
-            border: 1px dashed var(--accent-green);
-            background: rgba(0,255,102,0.05);
+            flex: 1; min-width: 200px; text-align: center; padding: 30px;
+            border: 1px dashed var(--accent-green); background: rgba(0,255,102,0.05);
         }
-
         .connection {
             display: flex; flex-direction: column; align-items: center;
             color: var(--accent-amber); font-family: var(--font-display);
         }
-        
         .arrow { font-size: 2rem; margin: -10px 0; }
 
-        /* ================= DRIVERS ================= */
-        .drivers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+        /* ================= BILL OF MATERIALS (BOM) ================= */
+        .bom-table {
+            width: 100%; border-collapse: collapse; margin-top: 20px;
+            background: var(--surface-color); border: 1px solid var(--border-color);
         }
-
-        .driver-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            padding: 25px;
-            transition: all 0.3s ease;
-            position: relative;
+        .bom-table th, .bom-table td {
+            padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color);
         }
+        .bom-table th { color: var(--accent-green); font-family: var(--font-display); font-size: 1.1rem; }
+        .bom-table tr:hover td { background: rgba(0,255,102,0.05); color: var(--accent-amber); }
+        .bom-table td:last-child { color: var(--text-muted); font-size: 0.9rem; }
 
-        .driver-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 10px; height: 10px;
-            border-top: 2px solid transparent; border-left: 2px solid transparent; transition: 0.3s;
-        }
+        /* ================= ROADMAP ================= */
+        .roadmap-list { list-style: none; padding: 0; }
+        .roadmap-list li { margin-bottom: 15px; padding: 15px; background: var(--surface-color); border-left: 2px solid #30363d; }
+        .roadmap-list li.done { border-left-color: var(--accent-green); }
+        .roadmap-list li.pending { border-left-color: var(--accent-amber); }
+        .status { font-weight: bold; margin-right: 10px; }
+        .done .status { color: var(--accent-green); }
+        .pending .status { color: var(--accent-amber); }
 
-        .driver-card:hover {
-            border-color: var(--accent-green);
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.1);
-        }
-
-        .driver-card:hover::before { border-color: var(--accent-green); }
-
-        .driver-card h3 { color: var(--accent-green); margin-bottom: 15px; font-size: 1.3rem; }
-        .driver-card ul { list-style: none; color: var(--text-muted); font-size: 0.9rem; margin-top: 15px;}
-        .driver-card ul li::before { content: '>'; color: var(--accent-amber); margin-right: 8px; }
-
-        /* ================= BUILD SYSTEM & TERMINAL ================= */
+        /* ================= TERMINAL ================= */
         .terminal-window {
-            background: #0d1117;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            overflow: hidden;
-            margin-top: 20px;
+            background: #0d1117; border: 1px solid var(--border-color);
+            border-radius: 6px; overflow: hidden; margin-top: 20px;
         }
-
         .terminal-bar {
             background: #161b22; border-bottom: 1px solid var(--border-color);
             padding: 10px 15px; display: flex; gap: 8px;
         }
-
         .dot { width: 12px; height: 12px; border-radius: 50%; }
         .dot.r { background: #ff5f56; } .dot.y { background: #ffbd2e; } .dot.g { background: #27c93f; }
-
         .terminal-body { padding: 20px; overflow-x: auto; }
         .terminal-body pre { color: var(--text-main); font-size: 0.9rem; }
         .prompt { color: var(--accent-green); }
         .comment { color: #8b949e; }
-
-        .file-tree {
-            color: var(--text-muted);
-            line-height: 1.4;
-            font-size: 0.9rem;
-            background: var(--surface-color);
-            padding: 20px; border: 1px solid var(--border-color);
-        }
 
         /* ================= FOOTER ================= */
         footer { text-align: center; padding: 60px 0; }
@@ -263,6 +231,8 @@
             .hero h1 { animation: none; white-space: normal; border-right: none; }
             .arch-container { flex-direction: column; }
             .connection { transform: rotate(90deg); margin: 20px 0; }
+            .param-row { flex-direction: column; align-items: flex-start; }
+            .bom-table { display: block; overflow-x: auto; }
         }
     </style>
 </head>
@@ -272,7 +242,7 @@
 
     <div class="container">
         <header class="hero reveal">
-            <div class="terminal-header">sysadmin@local:~/projects/smart-irrigation$ ./run_presentation.sh</div>
+            <div class="terminal-header">victor@ubuntu:~/projects/smart-irrigation$ ./run_presentation.sh</div>
             <h1 id="typewriter">Sistem_Irigare_Automatizată</h1>
             <p>Arhitectură Master-Slave. Implementare integrală în C bare-metal. Manipulare directă a regiștrilor AVR, fără framework-uri sau librării terțe.</p>
             <div>
@@ -291,14 +261,6 @@
                     <h3>MCU Secundar</h3>
                     <p>Arduino Nano. Rol de Slave. Achiziție date senzori (ADC) și acționare elemente de execuție (GPIO/Pompe).</p>
                 </div>
-                <div class="spec-item">
-                    <h3>Senzori & Actuatori</h3>
-                    <p>3x Senzori umiditate capacitivi (ADC 10-bit)<br>1x HC-SR04 (Nivel apă)<br>Pompe apă via Relee/Tranzistori</p>
-                </div>
-                <div class="spec-item">
-                    <h3>Interfață (HMI)</h3>
-                    <p>Display LCD 1602 controlat exclusiv prin modul TWI/I2C. Alarme sonore (Buzzer) și vizuale (LED).</p>
-                </div>
             </div>
         </section>
 
@@ -308,93 +270,129 @@
                 <div class="node">
                     <h3>MASTER (Uno)</h3>
                     <p style="color:var(--text-muted); font-size:0.9em; margin-top:10px;">
-                        [Logic Control]<br>
-                        Display LCD (I2C)<br>
-                        Ultrasonic (Timer/EXTI)<br>
-                        EEPROM (Thresholds)
+                        [Logic Control]<br>Display LCD (I2C)<br>Ultrasonic (Timer)<br>EEPROM
                     </p>
                 </div>
-                
                 <div class="connection">
-                    <span>Protocol I2C/TWI</span>
-                    <span class="arrow">⇄</span>
-                    <span>Polling / Interrupts</span>
+                    <span>Protocol I2C/TWI</span><span class="arrow">⇄</span><span>Polling</span>
                 </div>
-
                 <div class="node">
                     <h3>SLAVE (Nano)</h3>
                     <p style="color:var(--text-muted); font-size:0.9em; margin-top:10px;">
-                        [Data & Actuation]<br>
-                        Capacitive Sensors (ADC)<br>
-                        Water Pumps (GPIO)
+                        [Data & Actuation]<br>Capacitive Sensors<br>Water Pumps (GPIO)
                     </p>
                 </div>
             </div>
         </section>
 
         <section class="reveal">
-            <h2 class="section-title">HAL_Drivers (Bare-Metal)</h2>
-            <div class="drivers-grid">
-                <div class="driver-card">
-                    <h3>GPIO_Driver</h3>
-                    <p>Configurare directă a regiștrilor DDRx, PORTx, PINx pentru I/O digital.</p>
-                    <ul>
-                        <li>Setare pini In/Out</li>
-                        <li>Pull-up resistor config</li>
-                        <li>Bit masking optimizat</li>
-                    </ul>
+            <h2 class="section-title">Database_Specii_Target</h2>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Profiluri de irigare (EEPROM mapped) pentru flora de apartament.</p>
+            
+            <div class="flora-grid">
+                <div class="flora-card">
+                    <img src="https://images.unsplash.com/photo-1599368535041-9fb91d2551ec?auto=format&fit=crop&w=600&q=80" alt="Mușcată" class="flora-img">
+                    <div class="flora-details">
+                        <h3>Mușcată (Pelargonium) <span class="badge">ID: 0x01</span></h3>
+                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[████░░░░░░] 40%</span></div>
+                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">400 - 600</span></div>
+                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Directă</span></div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                            >_ Risc de putrezire a rădăcinilor la ADC > 800. Se irigă abundent, apoi se așteaptă uscarea solului.
+                        </p>
+                    </div>
                 </div>
-                <div class="driver-card">
-                    <h3>ADC_Driver</h3>
-                    <p>Achiziție de date pentru senzorii de umiditate folosind convertorul pe 10-bit.</p>
-                    <ul>
-                        <li>Modificare ADMUX / ADCSRA</li>
-                        <li>Single conversion mode</li>
-                        <li>Interrupt-driven optional</li>
-                    </ul>
+
+                <div class="flora-card">
+                    <img src="https://images.unsplash.com/photo-1612363064977-18b76c8c105c?auto=format&fit=crop&w=600&q=80" alt="Ficus" class="flora-img">
+                    <div class="flora-details">
+                        <h3>Ficus (Elastica) <span class="badge">ID: 0x02</span></h3>
+                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[███████░░░] 70%</span></div>
+                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">550 - 750</span></div>
+                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Indirectă</span></div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                            >_ Preferă umiditate constantă. Sistemul activează pompa via GPIO la scăderea sub pragul de 550 ADC.
+                        </p>
+                    </div>
                 </div>
-                <div class="driver-card">
-                    <h3>Timer_Driver</h3>
-                    <p>Implementare tick de sistem și delay-uri non-blocante.</p>
-                    <ul>
-                        <li>Timer0 in CTC Mode (1ms tick)</li>
-                        <li>Calcul precis al distanței (HC-SR04)</li>
-                    </ul>
-                </div>
-                <div class="driver-card">
-                    <h3>I2C_TWI_Driver</h3>
-                    <p>Comunicație serială sincronă implementată hardware.</p>
-                    <ul>
-                        <li>Master/Slave config via TWCR</li>
-                        <li>Transmitere date către LCD 1602</li>
-                        <li>Rutine de Error Handling</li>
-                    </ul>
-                </div>
-                <div class="driver-card">
-                    <h3>EEPROM_Memory</h3>
-                    <p>Persistența datelor critice la repornire.</p>
-                    <ul>
-                        <li>Salvare praguri umiditate</li>
-                        <li>Prevenire suprascriere (wear leveling basic)</li>
-                    </ul>
+
+                <div class="flora-card">
+                    <img src="https://images.unsplash.com/photo-1606887551061-6d7249b5526e?auto=format&fit=crop&w=600&q=80" alt="Violeta" class="flora-img">
+                    <div class="flora-details">
+                        <h3>Violeta de Parma <span class="badge">ID: 0x03</span></h3>
+                        <div class="param-row"><span class="param-label">Umiditate Sol:</span> <span class="param-value">[██████░░░░] 60%</span></div>
+                        <div class="param-row"><span class="param-label">Target ADC:</span> <span class="param-value">500 - 650</span></div>
+                        <div class="param-row"><span class="param-label">Lumină:</span> <span class="param-value">Semi-umbră</span></div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 15px;">
+                            >_ Irigare doar la nivelul solului. Execuție pompă în reprize scurte pentru a evita suprasaturarea bruscă.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section class="reveal">
-            <h2 class="section-title">Build_System & Testing</h2>
-            
-            <div class="specs-grid" style="margin-bottom: 20px;">
-                <div class="spec-item">
-                    <h3>Makefile + AVR-GCC</h3>
-                    <p>Compilare curată, gestionare dependențe și target-uri automate. Fără IDE-uri bloated.</p>
-                </div>
-                <div class="spec-item">
-                    <h3>Unit Testing</h3>
-                    <p>Rulare teste pe Host PC folosind register mocking. Acoperire de cod verificată prin `lcov`.</p>
-                </div>
-            </div>
+            <h2 class="section-title">Bill_Of_Materials (BOM)</h2>
+            <table class="bom-table">
+                <thead>
+                    <tr>
+                        <th>Componentă</th>
+                        <th>Cantitate</th>
+                        <th>Rol în Sistem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Arduino Uno (ATmega328P)</td>
+                        <td>1</td>
+                        <td>Unitate Centrală (Master). Gestionează decizia și HMI.</td>
+                    </tr>
+                    <tr>
+                        <td>Arduino Nano (ATmega328P)</td>
+                        <td>1</td>
+                        <td>Unitate Periferică (Slave). Achiziție date și relee.</td>
+                    </tr>
+                    <tr>
+                        <td>Senzor Umiditate Capacitiv v1.2</td>
+                        <td>3</td>
+                        <td>Măsoară umiditatea solului (ieșire analogică).</td>
+                    </tr>
+                    <tr>
+                        <td>Modul Relee 5V (4 Canale)</td>
+                        <td>1</td>
+                        <td>Control circuit forță pentru pompele de apă.</td>
+                    </tr>
+                    <tr>
+                        <td>Pompă Submersibilă 5V DC</td>
+                        <td>3</td>
+                        <td>Execută irigarea fizică per canal.</td>
+                    </tr>
+                    <tr>
+                        <td>Display LCD 1602 + Modul I2C</td>
+                        <td>1</td>
+                        <td>Afișare stare sistem, alarme și nivel ADC.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
 
+        <section class="reveal">
+            <h2 class="section-title">Project_Roadmap</h2>
+            <ul class="roadmap-list">
+                <li class="done">
+                    <span class="status">[✔]</span> Faza 1: Implementare Bare-Metal C, Arhitectură I2C și drivere hardware independente.
+                </li>
+                <li class="pending">
+                    <span class="status">[ ]</span> Faza 2: Integrare modul ESP8266/ESP32 via UART pentru telemetrie MQTT în rețeaua locală.
+                </li>
+                <li class="pending">
+                    <span class="status">[ ]</span> Faza 3: Dashboard Grafana / Node-RED pentru monitorizarea istorică a umidității per plantă.
+                </li>
+            </ul>
+        </section>
+
+        <section class="reveal">
+            <h2 class="section-title">Build_System</h2>
             <div class="terminal-window">
                 <div class="terminal-bar">
                     <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
@@ -402,15 +400,14 @@
                 <div class="terminal-body">
 <pre>
 <span class="comment"># Compilare proiect pentru target (ATmega328P)</span>
-<span class="prompt">sysadmin@local:~$</span> make all
+<span class="prompt">victor@ubuntu:~$</span> make all
 avr-gcc -Wall -Os -mmcu=atmega328p -c src/main.c -o build/main.o
-avr-gcc -Wall -Os -mmcu=atmega328p -c src/gpio.c -o build/gpio.o
-...
+avr-gcc -Wall -Os -mmcu=atmega328p -c src/i2c.c -o build/i2c.o
 avr-objcopy -O ihex build/firmware.elf build/firmware.hex
 <span style="color:var(--accent-green)">[SUCCESS] Build complete.</span>
 
 <span class="comment"># Upload via avrdude</span>
-<span class="prompt">sysadmin@local:~$</span> make flash
+<span class="prompt">victor@ubuntu:~$</span> make flash
 avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firmware.hex
 <span style="color:var(--accent-green)">[SUCCESS] Flash complete.</span>
 </pre>
@@ -427,7 +424,6 @@ avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firm
     </div>
 
     <script>
-        // Efect simplu de Typewriter pentru Hero pentru browserele care nu suporta animatia CSS complet
         const titleElement = document.getElementById('typewriter');
         const text = titleElement.innerText;
         titleElement.innerText = '';
@@ -437,35 +433,25 @@ avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firm
             if (i < text.length) {
                 titleElement.innerHTML += text.charAt(i);
                 i++;
-                setTimeout(typeWriter, 50); // viteza de scriere
+                setTimeout(typeWriter, 50); 
             }
         }
         
-        // Pornim efectul de typewriter cand se incarca pagina
-        window.onload = () => {
-            setTimeout(typeWriter, 500);
-        };
+        window.onload = () => { setTimeout(typeWriter, 500); };
 
-        // Scroll Reveal logic folosind IntersectionObserver
         const revealElements = document.querySelectorAll('.reveal');
-
-        const revealOptions = {
-            threshold: 0.15,
-            rootMargin: "0px 0px -50px 0px"
-        };
+        const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
 
         const revealOnScroll = new IntersectionObserver(function(entries, observer) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Animam doar o data
+                    observer.unobserve(entry.target); 
                 }
             });
         }, revealOptions);
 
-        revealElements.forEach(el => {
-            revealOnScroll.observe(el);
-        });
+        revealElements.forEach(el => { revealOnScroll.observe(el); });
     </script>
 </body>
 </html>
