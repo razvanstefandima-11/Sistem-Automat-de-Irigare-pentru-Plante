@@ -132,15 +132,6 @@ int main(void) {
                 LED_Off();
                 Buzzer_Off();
 
-                sprintf(buffer_uart, "[INFO] Senzor 1: %u\n", pct_sol[0]);
-                USART_Transmit(buffer_uart, strlen(buffer_uart)); 
-
-                sprintf(buffer_uart, "[INFO] Senzor 2: %u\n", pct_sol[1]);
-                USART_Transmit(buffer_uart, strlen(buffer_uart));
-
-                sprintf(buffer_uart, "[INFO] Senzor 3: %u\n", pct_sol[2]);
-                USART_Transmit(buffer_uart, strlen(buffer_uart));
-
                 for(uint8_t i = 0; i < 3; i++) {
                     uint8_t prag_pornire = praguri_irigare[i];
                     uint8_t prag_oprire = prag_pornire + 5; 
@@ -154,12 +145,17 @@ int main(void) {
                     }
                 }
 
+                // [NOU] Trimitem toate pragurile si indexul senzorului selectat (11 valori in total)
+                sprintf(buffer_uart, "DATA:%u,%u,%u,%u,%u,%u,1,%u,%u,%u,%u\n", 
+                        pct_sol[0], pct_sol[1], pct_sol[2],
+                        stare_pompe[0], stare_pompe[1], stare_pompe[2],
+                        praguri_irigare[0], praguri_irigare[1], praguri_irigare[2],
+                        senzor_selectat);
+                USART_Transmit(buffer_uart, strlen(buffer_uart)); 
+
                 actualizeaza_ecran_normal(pct_sol[0], pct_sol[1], pct_sol[2]);
 
             } else {
-                char msg_alarma[] = "[ALARM] Nivel apa scazut!\n";
-                USART_Transmit(msg_alarma, strlen(msg_alarma));
-                
                 for(uint8_t i = 0; i < 3; i++) {
                     if (stare_pompe[i]) {
                         trimite_comanda_i2c(i + 17); 
@@ -168,14 +164,18 @@ int main(void) {
                 }
 
                 if (toggle_alarma == 0) {
-                    LED_On(); 
-                    Buzzer_On();
-                    toggle_alarma = 1;
+                    LED_On(); Buzzer_On(); toggle_alarma = 1;
                 } else {
-                    LED_Off(); 
-                    Buzzer_Off();
-                    toggle_alarma = 0;
+                    LED_Off(); Buzzer_Off(); toggle_alarma = 0;
                 }
+
+                // [NOU] Trimitem formatul extins chiar si in modul alarma (Apă = 0)
+                sprintf(buffer_uart, "DATA:%u,%u,%u,%u,%u,%u,0,%u,%u,%u,%u\n", 
+                        pct_sol[0], pct_sol[1], pct_sol[2],
+                        stare_pompe[0], stare_pompe[1], stare_pompe[2],
+                        praguri_irigare[0], praguri_irigare[1], praguri_irigare[2],
+                        senzor_selectat);
+                USART_Transmit(buffer_uart, strlen(buffer_uart));
 
                 LCD_SetCursor(0, 0);
                 LCD_String("  SISTEM OPRIT  ");
