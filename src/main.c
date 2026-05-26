@@ -181,6 +181,7 @@ int main(void) {
                 LCD_String("  SISTEM OPRIT  ");
                 LCD_SetCursor(1, 0);
                 LCD_String("ALARMA:LIPSA APA");
+                
             }
         }
 
