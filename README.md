@@ -25,34 +25,47 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 
 ## Roadmap
 
-- [ ] GPIO driver
-- [ ] ADC driver
-- [ ] EEPROM driver
-- [ ] Interrupt driver
-- [ ] Timer driver
-- [ ] PWM driver
-- [ ] I2C driver
-- [ ] Lcd driver
+- [x] GPIO driver
+- [x] ADC driver
+- [x] EEPROM driver
+- [x] Interrupt driver
+- [x] Timer driver
+- [x] PWM driver
+- [x] I2C driver
+- [x] Lcd driver
+- [x] Pompe driver
+- [x] PWM driver
+- [x] Senzor Umiditate driver
+- [x] LED driver
 
 
 ## Structura Proiect
 
 ```
-├── bsp/            
-├── drivers/       
+├── bsp/            # Board definitions (uno.h, nano.h)
+├── drivers/        # Hardware Abstraction Layer
 │   ├── adc/
+│    ├── button/
+│   ├── buzzer/
 │   ├── eeprom/
 │   ├── gpio/
+│   ├── i2c/
 │   ├── interrupt/
-│   └── timer/
-│   └── lcd/
-├── src/            
-├── test/          
-│   ├── mocks/      
-│   ├── framework/  
-│   └── test_*.c    
-├── utils/         
-└── Makefile        
+│   ├── lcd/
+│   ├── led/
+│   ├── nivel apa/
+│   ├── pompe/
+│   ├── pwm
+│   ├── s_umiditate
+│   ├── timer/
+│   └── usart/
+├── src/            # Application source code (main.c)
+├── test/           # Unit tests & Mocks
+│   ├── mocks/      # Mock AVR registers for host testing
+│   ├── framework/  # Minimal test runner
+│   └── test_*.c    # Unit test files
+├── utils/          # Helper macros (BIT manipulations)
+└── Makefile        # Build configuration
 ```
 
 ## Build & Flash
