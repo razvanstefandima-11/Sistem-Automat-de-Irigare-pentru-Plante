@@ -8,6 +8,10 @@ Prin folosirea senzorilor de umiditate, a unui sistem de distribuție a apei și
 
 Repository-ul conține codul sursă, documentația și resursele necesare pentru înțelegerea, reproducerea și extinderea acestui sistem.
 
+## Descarcare software pentru monitorizare
+
+[![GreenKeeper Dashboard](https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0)
+
 ## Specificații
 
  - **Fără Librării Arduino**: Manipulare directă a regiștrilor (register manipulation) pentru control total asupra hardware-ului și eficiență maximă a resurselor.
