@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Prezentare tehnică: Sistem Irigare Automatizată Bare-Metal AVR cu interfață avansată.">
+    <title>Sistem Irigare Automatizată | Bare-Metal AVR</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        /* ================= VARIABLES ================= */
+        :root {
+            --bg-color: #0a0a0c;
+            --surface-color: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #00ff66;
+            --accent-amber: #ffb000;
+            --accent-blue: #58a6ff;
+            
+            --font-display: 'Share Tech Mono', monospace;
+            --font-code: 'JetBrains Mono', monospace;
+            --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            
+            --transition-speed: 0.3s;
+        }
+
+        /* ================= ACCESSIBILITY ================= */
+        .skip-link {
+            position: absolute; top: -40px; left: 0;
+            background: var(--accent-green); color: var(--bg-color);
+            padding: 8px 16px; z-index: 10000; font-weight: bold; font-family: var(--font-body);
+            transition: top var(--transition-speed);
+        }
+        .skip-link:focus { top: 0; }
+        :focus-visible { outline: 2px dashed var(--accent-green); outline-offset: 4px; }
+
+        body.no-crt .scanline { display: none !important; }
+        body.no-crt .glitch-hover:hover { animation: none !important; text-shadow: none !important; }
+        body.no-crt .hero h1 { animation: none !important; border-right: none; }
+
+        /* ================= SCROLLBAR ================= */
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 102, 0.2); border-color: var(--accent-green); }
+
+        /* ================= RESET & BASE ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body); 
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 255, 102, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 102, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        h1, h2, h3, .terminal-body, .badge, .param-value, .status { 
+            font-family: var(--font-display); 
+            font-weight: 400; 
+        }
+        h1, h2 { color: var(--accent-green); }
+
+        a { text-decoration: none; color: var(--accent-green); transition: color var(--transition-speed); }
+        a:hover, a:focus { color: var(--accent-amber); }
+
+        /* Containerul are z-index mai mare pentru a sta peste particule */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 10; }
+
+        /* ================= EFFECTS ================= */
+        /* Eliminăm pointer-events: none pentru a lăsa canvas-ul să capteze mouse-ul acolo unde nu există elemente .container */
+        #particles-js { position: fixed; width: 100vw; height: 100vh; top: 0; left: 0; z-index: 0; }
+        
+        .scanline { position: fixed; top: 0; left: 0; width: 100%; height: 10px; background: rgba(0, 255, 102, 0.1); opacity: 0.4; pointer-events: none; animation: scanline 8s linear infinite; z-index: 9999; }
+
+        /* ================= TOOLTIPS ================= */
+        .tech-word {
+            font-family: var(--font-code); font-size: 0.9em;
+            position: relative; cursor: help; color: var(--accent-green);
+            border-bottom: 1px dashed rgba(0, 255, 102, 0.5); transition: text-shadow var(--transition-speed);
+        }
+        .tech-word:hover, .tech-word:focus { text-shadow: 0 0 8px rgba(0, 255, 102, 0.5); }
+        .tech-word::after {
+            content: attr(data-tooltip); position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+            background: #0d1117; border: 1px solid var(--accent-green); color: var(--text-main); font-family: var(--font-body);
+            padding: 10px 14px; border-radius: 4px; font-size: 0.85rem; width: max-content; max-width: 250px;
+            white-space: normal; opacity: 0; visibility: hidden; transition: opacity var(--transition-speed) ease;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.1); z-index: 100; pointer-events: none; line-height: 1.4; text-align: left;
+        }
+        .tech-word::before {
+            content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            border-width: 6px; border-style: solid; border-color: var(--accent-green) transparent transparent transparent;
+            opacity: 0; visibility: hidden; transition: opacity var(--transition-speed) ease; z-index: 100; pointer-events: none;
+        }
+        .tech-word:hover::after, .tech-word:hover::before, .tech-word:focus::after, .tech-word:focus::before { opacity: 1; visibility: visible; }
+
+        /* ================= ANIMATIONS ================= */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        @keyframes blinkCursor { 50% { border-right-color: transparent; } }
+        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        @keyframes glitch { 0% { text-shadow: 2px 0 var(--accent-amber), -2px 0 var(--accent-green); } 50% { text-shadow: -2px 0 var(--accent-amber), 2px 0 var(--accent-green); } 100% { text-shadow: 2px 0 var(--accent-amber), -2px 0 var(--accent-green); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes drip { 0% { transform: translateY(-5px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(20px); opacity: 0; } }
+        @keyframes dataFlow { to { background-position: 20px 0; } }
+
+        /* ================= PUMP WIDGET ================= */
+        .pump-widget {
+            position: fixed; bottom: 30px; right: 30px; background: rgba(13, 17, 23, 0.85);
+            border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 20px;
+            display: flex; align-items: center; gap: 15px; backdrop-filter: blur(8px);
+            z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: border-color var(--transition-speed);
+        }
+        .pump-widget:hover { border-color: var(--accent-blue); }
+        .pump-icon { width: 36px; height: 36px; border: 2px solid var(--text-muted); border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative; background: #161b22; }
+        .impeller { width: 18px; height: 18px; border: 2px dashed var(--accent-blue); border-radius: 50%; animation: spin 1.5s linear infinite; }
+        .water-drop { width: 6px; height: 10px; background: var(--accent-blue); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; position: absolute; bottom: -18px; animation: drip 1.2s infinite ease-in; }
+        .pump-info { display: flex; flex-direction: column; }
+        .pump-title { font-family: var(--font-body); font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;}
+        .pump-status { font-family: var(--font-display); font-weight: bold; color: var(--accent-blue); font-size: 0.95rem; display: flex; align-items: center; gap: 5px;}
+        .status-dot { width: 8px; height: 8px; background: var(--accent-blue); border-radius: 50%; box-shadow: 0 0 8px var(--accent-blue); }
+
+        /* ================= HERO & LAYOUT ================= */
+        .hero { min-height: 90vh; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--border-color); position: relative; }
+        .header-actions { position: absolute; top: 20px; right: 0; display: flex; gap: 10px; z-index: 20;}
+        .terminal-header { color: var(--text-muted); font-family: var(--font-code); margin-bottom: 20px; font-size: 0.9rem; }
+        .hero h1 { font-size: clamp(2rem, 5vw, 4rem); margin-bottom: 20px; text-shadow: 0 0 10px rgba(0, 255, 102, 0.3); border-right: 3px solid var(--accent-green); white-space: nowrap; overflow: hidden; width: fit-content; animation: blinkCursor 0.8s step-end infinite; }
+        .hero p { font-size: 1.15rem; color: var(--text-muted); max-width: 700px; margin-bottom: 40px; }
+        
+        .btn { display: inline-block; padding: 10px 20px; border: 1px solid var(--accent-green); background: rgba(10, 10, 12, 0.8); color: var(--accent-green); font-family: var(--font-code); font-size: 1rem; cursor: pointer; transition: all var(--transition-speed) ease; backdrop-filter: blur(4px); border-radius: 4px; }
+        .btn.small { padding: 6px 12px; font-size: 0.85rem; border-color: var(--border-color); color: var(--text-muted); }
+        .btn:hover, .btn:focus { background: rgba(0, 255, 102, 0.1); border-color: var(--accent-green); color: var(--accent-green); }
+        .glitch-hover:hover { animation: glitch 0.2s linear infinite; }
+        
+        section { padding: 80px 0; border-bottom: 1px solid var(--border-color); }
+        .section-title { font-size: 2rem; margin-bottom: 40px; position: relative; display: inline-block;}
+        .section-title::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 50%; height: 2px; background: var(--accent-green); }
+
+        /* ================= ARCHITECTURE (IC DESIGN) ================= */
+        .arch-container { display: flex; align-items: center; justify-content: space-between; background: rgba(22, 27, 34, 0.5); padding: 50px 20px; border: 1px solid var(--border-color); border-radius: 8px; flex-wrap: wrap; gap: 20px; }
+        
+        .ic-node {
+            flex: 1; min-width: 220px; background: #1a1a1a; border: 2px solid #333;
+            border-radius: 6px; padding: 30px 20px; position: relative; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.05);
+        }
+        .ic-node::before, .ic-node::after {
+            content: ''; position: absolute; left: 10%; width: 80%; height: 8px;
+            background: repeating-linear-gradient(90deg, transparent, transparent 6px, #888 6px, #888 12px);
+        }
+        .ic-node::before { top: -8px; }
+        .ic-node::after { bottom: -8px; }
+        
+        .ic-node h3 { font-size: 1.2rem; color: #fff; letter-spacing: 2px; margin-bottom: 10px; }
+        .ic-node p { font-family: var(--font-code); font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.8; }
+        
+        .connection { display: flex; flex-direction: column; align-items: center; flex: 0.5; min-width: 150px; }
+        .data-line {
+            width: 100%; height: 3px; margin: 10px 0;
+            background: repeating-linear-gradient(90deg, var(--accent-amber) 0, var(--accent-amber) 8px, transparent 8px, transparent 16px);
+            animation: dataFlow 1s linear infinite;
+        }
+        .connection span { font-family: var(--font-code); font-size: 0.85rem; color: var(--accent-amber); }
+
+        /* ================= FLORA PROGRESS BARS ================= */
+        .flora-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 20px; }
+        .flora-card { background: rgba(22, 27, 34, 0.6); border: 1px solid var(--border-color); border-top: 3px solid var(--accent-green); border-radius: 6px; overflow: hidden; transition: all var(--transition-speed) ease; }
+        .flora-card:hover { border-color: var(--accent-green); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 255, 102, 0.05); }
+        .flora-details { padding: 25px; }
+        
+        .flora-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .flora-header h3 { color: var(--text-main); font-size: 1.3rem; margin: 0; }
+        .badge { font-size: 0.75rem; padding: 4px 8px; background: rgba(0, 255, 102, 0.1); color: var(--accent-green); border: 1px solid var(--accent-green); border-radius: 4px; }
+        
+        .param-group { margin-bottom: 15px; }
+        .param-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+        .param-value { color: var(--text-main); }
+        
+        .progress-track { width: 100%; height: 6px; background: #0d1117; border-radius: 3px; overflow: hidden; border: 1px solid #30363d; }
+        .progress-fill { height: 100%; background: var(--accent-green); width: 0; transition: width 1.5s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        .reveal.active .progress-fill { width: var(--target-width); }
+        
+        .flora-desc { font-size: 0.9rem; color: var(--text-muted); margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); line-height: 1.5; }
+
+        /* ================= BOM TABLE ================= */
+        .table-wrapper { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border-color); }
+        .bom-table { width: 100%; border-collapse: collapse; background: rgba(22, 27, 34, 0.85); text-align: left; }
+        .bom-table th, .bom-table td { padding: 14px 20px; border-bottom: 1px solid var(--border-color); }
+        .bom-table th { background: #0d1117; color: var(--text-muted); font-family: var(--font-body); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+        
+        .bom-table tbody tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+        .bom-table tbody tr:hover { background-color: rgba(0, 255, 102, 0.05); }
+        .bom-table th:nth-child(2), .bom-table td:nth-child(2) { text-align: right; font-family: var(--font-code); color: var(--accent-amber); font-weight: bold; }
+        .bom-table td:first-child { font-weight: 500; color: var(--text-main); }
+        .bom-table td:last-child { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* ================= ROADMAP ================= */
+        .roadmap-list { list-style: none; padding: 0; }
+        .roadmap-list li { margin-bottom: 15px; padding: 20px; background: rgba(22, 27, 34, 0.5); border-left: 3px solid #30363d; border-radius: 0 6px 6px 0; }
+        .roadmap-list li.done { border-left-color: var(--accent-green); background: linear-gradient(90deg, rgba(0,255,102,0.05) 0%, transparent 100%); }
+        .roadmap-list li.pending { border-left-color: var(--accent-amber); }
+        .status { margin-right: 15px; font-size: 1.1rem; }
+        .done .status { color: var(--accent-green); } .pending .status { color: var(--accent-amber); }
+
+        /* ================= TERMINAL ================= */
+        .terminal-window { background: #0d1117; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .terminal-bar { background: #161b22; border-bottom: 1px solid var(--border-color); padding: 12px 15px; display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.r { background: #ff5f56; } .dot.y { background: #ffbd2e; } .dot.g { background: #27c93f; }
+        .terminal-body { padding: 20px; overflow-x: auto; font-family: var(--font-code); font-size: 0.9rem; line-height: 1.5; color: var(--text-main); }
+        .prompt { color: var(--accent-green); } .comment { color: #8b949e; }
+        
+        footer { text-align: center; padding: 60px 0; }
+        
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 768px) {
+            .hero h1 { animation: none; white-space: normal; border-right: none; }
+            .header-actions { position: relative; top: 0; margin-bottom: 20px; justify-content: flex-start; }
+            .arch-container { flex-direction: column; }
+            .data-line { width: 3px; height: 50px; background: repeating-linear-gradient(180deg, var(--accent-amber) 0, var(--accent-amber) 8px, transparent 8px, transparent 16px); }
+            
+            .pump-widget { 
+                bottom: 15px; right: 15px; padding: 10px; border-radius: 50%; 
+                width: 50px; height: 50px; justify-content: center;
+            }
+            .pump-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Sari direct la conținut</a>
+
+    <div id="particles-js" aria-hidden="true"></div>
+    <div class="scanline" aria-hidden="true"></div>
+
+    <aside class="pump-widget" aria-label="Widget Status Pompă">
+        <div class="pump-icon" aria-hidden="true">
+            <div class="impeller"></div>
+            <div class="water-drop"></div>
+        </div>
+        <div class="pump-info">
+            <span class="pump-title">Canal Irigare M1</span>
+            <span class="pump-status"><span class="status-dot"></span> POMPĂ ACTIVĂ</span>
+        </div>
+    </aside>
+
+    <main class="container" id="main-content">
+        <header class="hero reveal">
+            <div class="header-actions">
+                <button id="toggle-crt" class="btn small" aria-label="Dezactivează efectele CRT vizuale">
+                    👁️‍🗨️ Toggle CRT
+                </button>
+            </div>
+            <div class="terminal-header" aria-hidden="true">victor@ubuntu:~/projects/smart-irrigation$ ./run_presentation.sh</div>
+            <h1 id="typewriter" aria-label="Sistem Irigare Automatizată">Sistem_Irigare_Automatizată</h1>
+            <p>Arhitectură Master-Slave. Implementare integrală în C <span tabindex="0" class="tech-word" role="tooltip" data-tooltip="Programare la nivel de regiștri hardware, fără sistem de operare sau framework-uri specifice precum Arduino IDE.">bare-metal</span>. Manipulare directă a regiștrilor AVR.</p>
+            <div>
+                <a href="https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante" target="_blank" rel="noopener noreferrer" class="btn glitch-hover">View Source pe GitHub_</a>
+            </div>
+        </header>
+
+        <section class="reveal" aria-labelledby="hw-specs">
+            <h2 id="hw-specs" class="section-title">Hardware_Specs</h2>
+            <div class="arch-container">
+                <div class="ic-node">
+                    <h3>MASTER MCU</h3>
+                    <p>ATmega328P (Uno)</p>
+                    <p>Logic Control</p>
+                    <p>LCD Display (<span tabindex="0" class="tech-word" data-tooltip="Inter-Integrated Circuit.">I2C</span>)</p>
+                    <p>Ultrasonic (<span tabindex="0" class="tech-word" data-tooltip="Modul hardware dedicat.">Timer</span>)</p>
+                </div>
+                
+                <div class="connection" aria-hidden="true">
+                    <span>Polling</span>
+                    <div class="data-line"></div>
+                    <span>Protocol I2C</span>
+                </div>
+                
+                <div class="ic-node">
+                    <h3>SLAVE MCU</h3>
+                    <p>ATmega328P (Nano)</p>
+                    <p>Data & Actuation</p>
+                    <p>Sensors (<span tabindex="0" class="tech-word" data-tooltip="Analog-to-Digital Converter.">ADC</span>)</p>
+                    <p>Pumps (GPIO)</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="db-specs">
+            <h2 id="db-specs" class="section-title">Database_Specii_Target</h2>
+            <p style="margin-bottom: 30px;">Profiluri de irigare (<span tabindex="0" class="tech-word" data-tooltip="Electrically Erasable Programmable Read-Only Memory.">EEPROM</span> mapped) pentru flora de apartament.</p>
+            
+            <div class="flora-grid">
+                <article class="flora-card">
+                    <div class="flora-details">
+                        <div class="flora-header">
+                            <h3>Mușcată</h3>
+                            <span class="badge">ID: 0x01</span>
+                        </div>
+                        
+                        <div class="param-group">
+                            <div class="param-label">
+                                <span>💧 Umiditate Sol</span>
+                                <span class="param-value">40%</span>
+                            </div>
+                            <div class="progress-track" aria-hidden="true">
+                                <div class="progress-fill" style="--target-width: 40%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="param-group">
+                            <div class="param-label">
+                                <span>🎯 Target ADC</span>
+                                <span class="param-value">400 - 600</span>
+                            </div>
+                        </div>
+
+                        <div class="flora-desc">
+                            >_ Risc de putrezire a rădăcinilor la ADC > 800. Se irigă abundent, apoi se așteaptă uscarea completă a stratului superior al solului.
+                        </div>
+                    </div>
+                </article>
+
+                <article class="flora-card">
+                    <div class="flora-details">
+                        <div class="flora-header">
+                            <h3>Trandafir</h3>
+                            <span class="badge">ID: 0x02</span>
+                        </div>
+                        
+                        <div class="param-group">
+                            <div class="param-label">
+                                <span>💧 Umiditate Sol</span>
+                                <span class="param-value">65%</span>
+                            </div>
+                            <div class="progress-track" aria-hidden="true">
+                                <div class="progress-fill" style="--target-width: 65%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="param-group">
+                            <div class="param-label">
+                                <span>🎯 Target ADC</span>
+                                <span class="param-value">450 - 680</span>
+                            </div>
+                        </div>
+
+                        <div class="flora-desc">
+                            >_ Sensibil la uscăciune, preferă o udare constantă dar fără exces. Activare pompă în impulsuri PWM lente pentru a nu tasa solul.
+                        </div>
+                    </div>
+                </article>
+
+                <article class="flora-card">
+                    <div class="flora-details">
+                        <div class="flora-header">
+                            <h3>Orhidee</h3>
+                            <span class="badge">ID: 0x03</span>
+                        </div>
+                        
+                        <div class="param-group">
+                            <div class="param-label">
+                                <span>💧 Umiditate Sol</span>
+                                <span class="param-value">20%</span>
+                            </div>
+                            <div class="progress-track" aria-hidden="true">
+                                <div class="progress-fill" style="--target-width: 20%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="param-group">
+                            <div class="param-label">
+                                <span>🎯 Target ADC</span>
+                                <span class="param-value">250 - 400</span>
+                            </div>
+                        </div>
+
+                        <div class="flora-desc">
+                            >_ Rădăcinile necesită aerare masivă. Sistemul aplică o peliculă minimă de apă exclusiv când substratul este complet uscat.
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="bom-sys">
+            <h2 id="bom-sys" class="section-title">Bill_Of_Materials (BOM)</h2>
+            <div class="table-wrapper">
+                <table class="bom-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Componentă</th>
+                            <th scope="col">Cantitate</th>
+                            <th scope="col">Rol în Sistem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Arduino Uno (ATmega328P)</td>
+                            <td>1</td>
+                            <td>Unitate Centrală (Master). Gestionează decizia.</td>
+                        </tr>
+                        <tr>
+                            <td>Arduino Nano (ATmega328P)</td>
+                            <td>1</td>
+                            <td>Unitate Periferică (Slave). Achiziție date.</td>
+                        </tr>
+                        <tr>
+                            <td>Senzor Umiditate Capacitiv</td>
+                            <td>3</td>
+                            <td>Măsoară umiditatea solului (ieșire analogică).</td>
+                        </tr>
+                        <tr>
+                            <td>Modul Relee 5V (4 Canale)</td>
+                            <td>1</td>
+                            <td>Control circuit forță pentru pompele de apă.</td>
+                        </tr>
+                        <tr>
+                            <td>Pompă Submersibilă 5V DC</td>
+                            <td>3</td>
+                            <td>Execută irigarea fizică per canal.</td>
+                        </tr>
+                        <tr>
+                            <td>Display LCD 1602 + Modul I2C</td>
+                            <td>1</td>
+                            <td>Afișare stare sistem, alarme și nivel ADC.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="reveal" aria-labelledby="roadmap-sys">
+            <h2 id="roadmap-sys" class="section-title">Project_Roadmap</h2>
+            <ul class="roadmap-list">
+                <li class="done">
+                    <span class="status" aria-label="Finalizat">[✔]</span> <strong>Faza 1:</strong> Implementare Bare-Metal C, Arhitectură I2C și drivere hardware.
+                </li>
+                <li class="pending">
+                    <span class="status" aria-label="În progres">[ ]</span> <strong>Faza 2:</strong> Integrare modul ESP8266 via UART pentru telemetrie MQTT.
+                </li>
+                <li class="pending">
+                    <span class="status" aria-label="Planificat">[ ]</span> <strong>Faza 3:</strong> Dashboard Grafana pentru monitorizarea istorică a umidității.
+                </li>
+            </ul>
+        </section>
+
+        <section class="reveal" aria-labelledby="build-sys">
+            <h2 id="build-sys" class="section-title">Build_System</h2>
+            <div class="terminal-window" aria-hidden="true">
+                <div class="terminal-bar">
+                    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                </div>
+                <div class="terminal-body">
+<pre><code><span class="comment"># Compilare proiect pentru target (ATmega328P)</span>
+<span class="prompt">victor@ubuntu:~$</span> make all
+avr-gcc -Wall -Os -mmcu=atmega328p -c src/main.c -o build/main.o
+avr-gcc -Wall -Os -mmcu=atmega328p -c src/i2c.c -o build/i2c.o
+avr-objcopy -O ihex build/firmware.elf build/firmware.hex
+<span style="color:var(--accent-green)">[SUCCESS] Build complete.</span>
+
+<span class="comment"># Upload via avrdude</span>
+<span class="prompt">victor@ubuntu:~$</span> make flash
+avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 115200 -U flash:w:build/firmware.hex
+<span style="color:var(--accent-green)">[SUCCESS] Flash complete.</span></code></pre>
+                </div>
+            </div>
+        </section>
+
+        <footer class="reveal">
+            <a href="https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante" target="_blank" rel="noopener noreferrer" class="btn glitch-hover">Accesare Repository GitHub_</a>
+            <p style="margin-top: 20px; color: var(--text-muted); font-size: 0.9rem;">
+                Dezvoltat cu pasiune pentru sistemele embedded.
+            </p>
+        </footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Accessibility Toggle
+            const crtToggleBtn = document.getElementById('toggle-crt');
+            crtToggleBtn.addEventListener('click', () => {
+                document.body.classList.toggle('no-crt');
+                const isOff = document.body.classList.contains('no-crt');
+                crtToggleBtn.innerText = isOff ? '👁️‍🗨️ Activează CRT' : '👁️‍🗨️ Toggle CRT';
+            });
+
+            // 2. Init Particles.js (Configurație ajustată pentru interactivitate maximă)
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS("particles-js", {
+                    "particles": {
+                        "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                        "color": { "value": "#00ff66" },
+                        "shape": { "type": "circle" },
+                        "opacity": { "value": 0.4, "random": false },
+                        "size": { "value": 3, "random": true },
+                        "line_linked": { "enable": true, "distance": 150, "color": "#00ff66", "opacity": 0.3, "width": 1 },
+                        "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "out_mode": "out" }
+                    },
+                    "interactivity": {
+                        "detect_on": "window",
+                        "events": {
+                            "onhover": { "enable": true, "mode": "grab" },
+                            "onclick": { "enable": true, "mode": "push" },
+                            "resize": true
+                        },
+                        "modes": {
+                            "grab": { "distance": 200, "line_linked": { "opacity": 0.6 } },
+                            "push": { "particles_nb": 4 }
+                        }
+                    },
+                    "retina_detect": true
+                });
+            }
+
+            // 3. Typewriter Effect
+            const initTypewriter = () => {
+                const titleElement = document.getElementById('typewriter');
+                if (!titleElement) return;
+
+                const textToType = titleElement.innerText;
+                titleElement.innerText = '';
+                titleElement.setAttribute('aria-label', textToType); 
+                let currentIndex = 0;
+                
+                const typeWriterCore = () => {
+                    if (currentIndex < textToType.length) {
+                        titleElement.innerHTML += textToType.charAt(currentIndex);
+                        currentIndex++;
+                        setTimeout(typeWriterCore, 50); 
+                    }
+                };
+                
+                setTimeout(typeWriterCore, 300);
+            };
+            initTypewriter();
+
+            // 4. Scroll Reveal API
+            const initScrollReveal = () => {
+                const revealElements = document.querySelectorAll('.reveal');
+                if (!('IntersectionObserver' in window)) {
+                    revealElements.forEach(el => el.classList.add('active')); 
+                    return;
+                }
+
+                const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+                const observer = new IntersectionObserver((entries, observerObj) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                            observerObj.unobserve(entry.target); 
+                        }
+                    });
+                }, revealOptions);
+
+                revealElements.forEach(el => observer.observe(el));
+            };
+            initScrollReveal();
+
+        });
+    </script>
+</body>
+</html>
