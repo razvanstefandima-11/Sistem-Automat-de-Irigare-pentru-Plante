@@ -14,19 +14,19 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
  - **BSP (Board Support Package)**: Mapare hardware specifică pentru Arduino Uno (Master) și Arduino Nano (Slave).
  - **Drivere**: Arhitectură modulară, documentată și reutilizabilă pentru perifericele ATmega328P:
    
-    **GPIO**: Inițializare, Write (Pompe, LED, Buzzer), Read (Senzor Ultrasonic), Toggle (LED Alarma).
-    **Interrupts**: Gestionarea ecoului de la HC-SR04 și a comunicației I2C prin vectori de întrerupere.
-    **Timer**: System Tick de 1ms folosind Timer0 în mod CTC (pentru cronometrarea alarmei de 60s).
-    **EEPROM**: Salvarea pragurilor de umiditate (Read/Write) pentru a nu pierde setările la pană de curent.
-    **ADC**: Conversie pe 10-biți în mod blocking pentru citirea celor 3 senzori de umiditate capacitivi.
-    **I2C (TWI)**: Driver pentru comunicarea Master (Uno) - Slave (Nano) și controlul display-ului LCD 1602.
-    **UART (USART)**: Comunicație serială pentru debugging, monitorizare în timp real și afișarea valorilor senzorilor în Serial Monitor.
-    **LCD 1602**: Driver pentru afișarea nivelului de umiditate, stării pompelor, mesajelor de avertizare și meniului de configurare.
-    **Buzzer**: Generarea alertelor sonore pentru nivel scăzut al apei și stări critice ale sistemului.
-    **Pump Control**: Driver pentru controlul pompelor prin relee, incluzând protecție software împotriva activării simultane necontrolate.
-    **Button/Input Driver**: Debouncing software și detectarea apăsărilor pentru navigarea prin meniul de configurare.
-    **Scheduler / Task Manager**: Execuție periodică non-blocking a taskurilor folosind System Tick pentru actualizarea senzorilor și logicii de control.
-    **Alarm Manager**: Gestionarea condițiilor de alarmă (rezervor gol, umiditate critică) și sincronizarea semnalizării LED/Buzzer.
+    **GPIO**: Inițializare, Write (Pompe, LED, Buzzer), Read (Senzor Ultrasonic), Toggle (LED Alarma). 
+    **Interrupts**: Gestionarea ecoului de la HC-SR04 și a comunicației I2C prin vectori de întrerupere. 
+    **Timer**: System Tick de 1ms folosind Timer0 în mod CTC (pentru cronometrarea alarmei de 60s). 
+    **EEPROM**: Salvarea pragurilor de umiditate (Read/Write) pentru a nu pierde setările la pană de curent. 
+    **ADC**: Conversie pe 10-biți în mod blocking pentru citirea celor 3 senzori de umiditate capacitivi. 
+    **I2C (TWI)**: Driver pentru comunicarea Master (Uno) - Slave (Nano) și controlul display-ului LCD 1602. 
+    **UART (USART)**: Comunicație serială pentru debugging, monitorizare în timp real și afișarea valorilor senzorilor în Serial Monitor. 
+    **LCD 1602**: Driver pentru afișarea nivelului de umiditate, stării pompelor, mesajelor de avertizare și meniului de configurare. 
+    **Buzzer**: Generarea alertelor sonore pentru nivel scăzut al apei și stări critice ale sistemului. 
+    **Pump Control**: Driver pentru controlul pompelor prin relee, incluzând protecție software împotriva activării simultane necontrolate. 
+    **Button/Input Driver**: Debouncing software și detectarea apăsărilor pentru navigarea prin meniul de configurare.  
+    **Scheduler / Task Manager**: Execuție periodică non-blocking a taskurilor folosind System Tick pentru actualizarea senzorilor și logicii de control. 
+    **Alarm Manager**: Gestionarea condițiilor de alarmă (rezervor gol, umiditate critică) și sincronizarea semnalizării LED/Buzzer. 
 
  - **Sistem de Build Robust**: Utilizarea Makefile pentru automatizarea proceselor de compilare, link-editare și scriere (flash) via avrdude.
  - **Unit Testing pe Host**: Rularea testelor unitare direct pe calculator (fără hardware) prin tehnici de register mocking.
