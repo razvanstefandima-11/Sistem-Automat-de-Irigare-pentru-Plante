@@ -10,7 +10,9 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 
 ## Descarcare software pentru monitorizare
 
-[![GreenKeeper Dashboard](https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0)
+<a href="https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0">
+  <img src="https://img.shields.io/badge/⬇-Download_Software-success?style=for-the-badge">
+</a>https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0
 
 ## Specificații
 
