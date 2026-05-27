@@ -8,11 +8,9 @@ Prin folosirea senzorilor de umiditate, a unui sistem de distribuție a apei și
 
 Repository-ul conține codul sursă, documentația și resursele necesare pentru înțelegerea, reproducerea și extinderea acestui sistem.
 
-## Descarcare software pentru monitorizare
+## Descărcare software pentru monitorizare
 
-<a href="https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0">
-  <img src="https://img.shields.io/badge/⬇-Download_Software-success?style=for-the-badge">
-</a>https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0
+[![Download](https://img.shields.io/badge/⬇-Download_Software-success?style=for-the-badge)](https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0)
 
 ## Specificații
 
