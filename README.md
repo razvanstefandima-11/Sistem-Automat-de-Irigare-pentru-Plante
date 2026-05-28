@@ -44,7 +44,6 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 - [x] I2C driver
 - [x] Lcd driver
 - [x] Pompe driver
-- [x] PWM driver
 - [x] Senzor Umiditate driver
 - [x] LED driver
 
