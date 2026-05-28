@@ -93,6 +93,66 @@ I2C_S --> LED
 GPIO --> I2C_S
 ```
 
+## 🔌 Conexiuni Fizice și Mapare Pini (Cablaj)
+
+Pentru a asigura funcționarea stabilă a arhitecturii Master-Slave și a evita zgomotul electromagnetic provocat de comutația pompelor, pinii sunt mapați strict la nivel de registru bare-metal.
+
+### 1. Nodul Master (Arduino Uno)
+Gestionează achiziția de date de la senzori, interfața cu utilizatorul și trimite comenzi executive către Slave prin magistrala I2C.
+
+| Periferic / Modul | Pin Componentă | Pin Fizic Arduino Uno | Note Hardware & Configurare |
+| :--- | :---: | :---: | :--- |
+| **Magistrală I2C** | SDA <br> SCL | **A4** <br> **A5** | Linie date I2C (Inter-Integrated Circuit).<br>Linie ceas I2C. *Masele plăcilor trebuie unite!* |
+| **Senzori Sol** | Senzor 1 (AOUT) <br> Senzor 2 (AOUT) <br> Senzor 3 (AOUT) | **A0** <br> **A1** <br> **A2** | Intrări analogice (ADC).<br>Măsoară umiditatea în mod capacitiv (0 - 99%). |
+| **Nivel Rezervor** | Senzor Apă (AOUT) | **A3** | Detectează prezența apei în bazin pentru avarie. |
+| **Ecran LCD 1602** | RS <br> EN <br> D4 <br> D5 <br> D6 <br> D7 | **D12** <br> **D11** <br> **D5** <br> **D4** <br> **D3** <br> **D2** | Interfațare în mod 4 biți.<br>Contrastul (Vo) se leagă la un potențiometru sau rezistor de 1kΩ la GND. |
+| **Butoane Meniu** | Buton MINUS <br> Buton SELECT <br> Buton PLUS | **D9** <br> **D10** <br> **D13** | Configurați cu **Pull-up intern** din regiștri.<br>Comută pe masă (GND) la apăsare (Logic LOW). |
+| **Alerte Sistem** | LED Alarmă <br> Buzzer | **D8** <br> **D6** | Ieșiri digitale de avarie.<br>Se recomandă înserierea LED-ului cu un rezistor de 220Ω. |
+
+### 2. Nodul Slave (Arduino Nano)
+Ascultă asincron magistrala TWI/I2C la adresa `0x20` și controlează direct punțile de relee pentru acționarea hidraulică.
+
+| Periferic / Modul | Pin Componentă | Pin Fizic Arduino Nano | Note Hardware & Configurare |
+| :--- | :---: | :---: | :--- |
+| **Magistrală I2C** | SDA <br> SCL | **A4** <br> **A5** | Conexiune directă cu pinii corespunzători de pe Uno. |
+| **Actuatoare (Pompe)**| Releu 1 (IN1) <br> Releu 2 (IN2) <br> Releu 3 (IN3) | **D2** <br> **D3** <br> **D4** | Ieșiri digitale active pe LOW (sau HIGH, în funcție de modulul de relee folosit). |
+
+> ⚠️ **Regulă de aur pentru cablaj:** Pinii GND (Masa) ai ambelor plăci Arduino, ai senzorilor și ai alimentării externe a pompelor trebuie să fie **conectați împreună** pentru a asigura un potențial de referință comun!
+> 
+> ⚠️ **STABILITATE - Rezistențe Pull-up Hardware pe I2C:**
+> Deși pull-up-ul intern este activat software direct din regiștri (`PORTC |= ...`), rezistențele interne ale microcontrolerului sunt prea mari (slabe) pentru medii cu zgomot inductiv. Pentru o stabilitate maximă a semnalului, se recomandă legarea a două rezistențe fizice externe de **4.7kΩ** sau **10kΩ** (una între SDA/A4 și 5V, iar cealaltă între SCL/A5 și 5V). Acest artificiu hardware asanează complet zgomotul electromagnetic și interferențele provocate de inductanța pompelor de apă în momentul comutației releelor, prevenind blocarea magistralei TWI.
+
+---
+
+## Biblioteca Botanică (Praguri de Udare)
+
+Sistemul folosește o logică de mapare procentuală inversată bazată pe calibrarea senzorilor capacitivi (`0%` - uscat complet, `99%` - imersie totală în apă). Algoritmul pornește irigarea când umiditatea scade sub pragul setat și o oprește la un nivel de `Prag + 5%` (Histerezis software pentru protecția pompelor).
+
+Mai jos se găsesc valorile de calibrare recomandate pentru 15 plante comune din comerț:
+
+<details>
+<summary>📊 Click pentru a extinde Tabelul cu Pragurile Plantelor</summary>
+
+| Nr. | Plantă Comună | Prag Irigare | Necesar Hidric / Comportament | Recomandare plasare senzor |
+| :---: | :--- | :---: | :--- | :--- |
+| **1** | Mușcată *(Pelargonium)* | **30% - 35%** | Moderat. Solul trebuie să respire între două cicluri. | Adâncime medie în ghiveci. |
+| **2** | Orhidee *(Phalaenopsis)* | **15% - 20%** | Foarte scăzut. Rădăcinile au nevoie de aerisire mare. | Fixat strâns în scoarță (evitați golurile de aer). |
+| **3** | Violetă Africană | **40% - 45%** | Constant moderat. Urăște contactul apei cu frunzele. | Senzor plasat la suprafață (rădăcini scurte). |
+| **4** | Anthurium *(Floarea Flamingo)*| **45% - 50%** | Tropical. Sensibilă la scăderi bruște sub 40%. | Necesită sol aerat (amestec turbă/scoarță). |
+| **5** | Crăciunel *(Schlumbergera)* | **25% - 30%** | Cactus de pădure. Evitați solul noroios sau argilos. | Monitorizați drenajul eficient al ghiveciului. |
+| **6** | Crinul Păcii *(Spathiphyllum)*| **55% - 60%** | Ridicat. Frunzele se pleoștesc vizibil sub 50%. | Reacționează cel mai rapid la pornirea irigării. |
+| **7** | Calathea *(Planta Păun)* | **55% - 60%** | Mare și constant. Marginile frunzelor se usucă la stres. | Mențineți pământul reavăn în permanență. |
+| **8** | Cyclamen | **45% - 50%** | Sol mereu reavăn. Udarea la rădăcină protejează bulbul. | Direcționați furtunul de apă la baza tulpinii. |
+| **9** | Begonie | **40% - 45%** | Moderat. Tulpinile cărnoase pot putrezi la băltire. | Păstrați un prag de siguranță de max. 45%. |
+| **10**| Azalee *(Rhododendron)* | **60% - 65%** | Foarte ridicat. Pământul (acid) trebuie să fie ca un burete. | Uscarea completă a solului îi poate fi fatală. |
+| **11**| Ficus Benjamina | **35% - 40%** | Moderat. Își pierde frunzele la șocuri hidrice extreme. | Pragul de 35% oferă stabilitatea ideală. |
+| **12**| Dracaena Marginata | **25% - 30%** | Scăzut. Foarte rezistentă la perioade lungi de secetă. | Rădăcinile putrezesc ușor. Păstrați pragul jos. |
+| **13**| Pothos *(Iedera Dracului)* | **30% - 35%** | Moderat. Extrem de iertătoare cu erorile de calibrare. | Ideală pentru testele de rulare ale sistemului. |
+| **14**| Guzmania *(Bromelia)* | **35% - 40%** | Moderat. Rădăcinile au rol principal de fixare. | Solul se umzește doar pentru microclimat. |
+| **15**| Schefflera *(Arborele Umbrelă)*| **30%** | Moderat-scăzut. Solul trebuie lăsat să se usuce la suprafață. | Dacă frunzele cad, coborâți pragul spre 25%. |
+
+</details>
+
 ## Roadmap
 
 - [x] GPIO driver
