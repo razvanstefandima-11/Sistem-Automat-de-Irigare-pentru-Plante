@@ -10,7 +10,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 
 ## Descărcare software pentru monitorizare
 
-[![Download](https://img.shields.io/badge/⬇-Download_Software-success?style=for-the-badge)](https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0)
+[![Download](https://img.shields.io/badge/⬇-Download_Software-success?style=for-the-badge)](https://github.com/razvanstefandima-11/Sistem-Automat-de-Irigare-pentru-Plante/releases/tag/1.0.1)
 
 ## Specificații
 
