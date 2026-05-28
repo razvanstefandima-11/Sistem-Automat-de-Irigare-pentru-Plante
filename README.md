@@ -105,7 +105,7 @@ Gestionează achiziția de date de la senzori, interfața cu utilizatorul și tr
 | **Magistrală I2C** | SDA <br> SCL | **A4** <br> **A5** | Linie date I2C (Inter-Integrated Circuit).<br>Linie ceas I2C. *Masele plăcilor trebuie unite!* |
 | **Senzori Sol** | Senzor 1 (AOUT) <br> Senzor 2 (AOUT) <br> Senzor 3 (AOUT) | **A0** <br> **A1** <br> **A2** | Intrări analogice (ADC).<br>Măsoară umiditatea în mod capacitiv (0 - 99%). |
 | **Nivel Rezervor** | Senzor Apă (AOUT) | **A3** | Detectează prezența apei în bazin pentru avarie. |
-| **Ecran LCD 1602** | RS <br> EN <br> D4 <br> D5 <br> D6 <br> D7 | **D12** <br> **D11** <br> **D5** <br> **D4** <br> **D3** <br> **D2** | Interfațare în mod 4 biți.<br>Contrastul (Vo) se leagă la un potențiometru sau rezistor de 1kΩ la GND. |
+| **Ecran LCD 1602** | RS <br> EN <br> D4 <br> D5 <br> D6 <br> D7 <br> VSS/RW/K <br> VDD/A | **D12** <br> **D11** <br> **D5** <br> **D4** <br> **D3** <br> **D2** <br> **GND** <br> **5V** | Interfațare în mod 4 biți.<br>Contrastul (Vo) se leagă la un potențiometru sau rezistor de 1kΩ la GND. |
 | **Butoane Meniu** | Buton MINUS <br> Buton SELECT <br> Buton PLUS | **D9** <br> **D10** <br> **D13** | Configurați cu **Pull-up intern** din regiștri.<br>Comută pe masă (GND) la apăsare (Logic LOW). |
 | **Alerte Sistem** | LED Alarmă <br> Buzzer | **D8** <br> **D6** | Ieșiri digitale de avarie.<br>Se recomandă înserierea LED-ului cu un rezistor de 220Ω. |
 
