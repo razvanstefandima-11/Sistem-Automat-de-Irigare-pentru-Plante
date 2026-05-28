@@ -33,6 +33,66 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
      
   - **Sistem de Build Robust**: Utilizarea Makefile pentru automatizarea proceselor de compilare, link-editare și scriere (flash) via avrdude.
 
+## Diagrama Arhitectura
+
+```mermaid
+flowchart LR
+
+%% ========== SENSORS ==========
+subgraph SENSORS
+    S1[Soil Moisture Sensor 1]
+    S2[Soil Moisture Sensor 2]
+    S3[Soil Moisture Sensor 3]
+    WL[Water Level Sensor]
+    BTN[User Buttons]
+end
+
+%% ========== MASTER ==========
+subgraph MASTER["Arduino Uno (MASTER)"]
+    ADC[ADC Driver]
+    CTRL[Control Logic / Alarm Manager]
+    EEPROM[(EEPROM Storage)]
+    TIMER[Timer0 - 1ms System Tick]
+    USART[USART Debug]
+    I2C_M[I2C Master Driver]
+    LCD[LCD 1602 Driver]
+end
+
+%% ========== SLAVE ==========
+subgraph SLAVE["Arduino Nano (SLAVE)"]
+    I2C_S[I2C Slave Driver]
+    PWM[PWM Driver]
+    PUMP[Pump Control - Relays]
+    BUZ[Buzzer Driver]
+    LED[LED Driver]
+    GPIO[GPIO Driver]
+end
+
+%% ========== DATA FLOW ==========
+S1 --> ADC
+S2 --> ADC
+S3 --> ADC
+WL --> ADC
+BTN --> GPIO
+
+ADC --> CTRL
+TIMER --> CTRL
+
+CTRL --> EEPROM
+CTRL --> I2C_M
+CTRL --> USART
+CTRL --> LCD
+
+I2C_M <--> I2C_S
+
+I2C_S --> PWM
+PWM --> PUMP
+
+I2C_S --> BUZ
+I2C_S --> LED
+GPIO --> I2C_S
+```
+
 ## Roadmap
 
 - [x] GPIO driver
