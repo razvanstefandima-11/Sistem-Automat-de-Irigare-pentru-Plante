@@ -29,10 +29,9 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
     - **Buzzer:** Generarea alertelor sonore pentru nivel scăzut al apei și stări critice ale sistemului.
     - **Pump Control:** Driver pentru controlul pompelor prin relee.
     - **Button/Input Driver:** Debouncing software și detectarea apăsărilor pentru navigarea prin meniul de configurare.
-    - **Scheduler / Task Manager:** Execuție periodică non-blocking a taskurilor folosind System Tick.
     - **Alarm Manager:** Gestionarea condițiilor de alarmă și sincronizarea semnalizării LED/Buzzer.
-
- - **Sistem de Build Robust**: Utilizarea Makefile pentru automatizarea proceselor de compilare, link-editare și scriere (flash) via avrdude.
+     
+- **Sistem de Build Robust**: Utilizarea Makefile pentru automatizarea proceselor de compilare, link-editare și scriere (flash) via avrdude.
 
 ## Roadmap
 
@@ -56,7 +55,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 ├── bsp/            # Board definitions (uno.h, nano.h)
 ├── drivers/        # Hardware Abstraction Layer
 │   ├── adc/
-│    ├── button/
+│   ├── button/
 │   ├── buzzer/
 │   ├── eeprom/
 │   ├── gpio/
@@ -66,8 +65,8 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
 │   ├── led/
 │   ├── nivel apa/
 │   ├── pompe/
-│   ├── pwm
-│   ├── s_umiditate
+│   ├── pwm/
+│   ├── s_umiditate/
 │   ├── timer/
 │   └── usart/
 ├── src/            # Application source code (main.c)
