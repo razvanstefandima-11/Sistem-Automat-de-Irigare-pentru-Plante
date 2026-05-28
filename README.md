@@ -31,7 +31,7 @@ Repository-ul conține codul sursă, documentația și resursele necesare pentru
     - **Button/Input Driver:** Debouncing software și detectarea apăsărilor pentru navigarea prin meniul de configurare.
     - **Alarm Manager:** Gestionarea condițiilor de alarmă și sincronizarea semnalizării LED/Buzzer.
      
- - **Sistem de Build Robust**: Utilizarea Makefile pentru automatizarea proceselor de compilare, link-editare și scriere (flash) via avrdude.
+  - **Sistem de Build Robust**: Utilizarea Makefile pentru automatizarea proceselor de compilare, link-editare și scriere (flash) via avrdude.
 
 ## Roadmap
 
