@@ -92,8 +92,65 @@ I2C_S --> BUZ
 I2C_S --> LED
 GPIO --> I2C_S
 ```
+### Logica de Execuție: Nodul Slave (Arduino Nano)
 
-## 🔌 Conexiuni Fizice și Mapare Pini (Cablaj)
+Placa Nano rulează o arhitectură eficientă, orientată pe evenimente (event-driven). Procesorul așteaptă în mod pasiv recepția datelor pe magistrala I2C și activează releele doar atunci când detectează comenzi valide de la Master, eliberând astfel resursele sistemului.
+
+Mai jos este prezentată structura nucleului de execuție (`main.c`) pentru placa Slave:
+
+```c
+#include <stdint.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+#include "drivers/i2c/i2c_slave.h"
+#include "drivers/pompe/pompe.h"
+
+#define SLAVE_ADDR 0x20
+
+int main(void) {
+    Pompe_Init();
+    i2c_slave_init(SLAVE_ADDR);
+    
+    // Activăm întreruperile globale obligatorii pentru modul Slave
+    sei(); 
+
+    while (1) {
+        uint8_t comanda_receptionata;
+        
+        // Verificăm în siguranță dacă a sosit o comandă nouă de la Master
+        if (i2c_slave_has_data(&comanda_receptionata)) {
+            switch (comanda_receptionata) {
+                case 1:
+                    Pompa1_On();
+                    break;
+                case 2:
+                    Pompa2_On();
+                    break;
+                case 3:
+                    Pompa3_On();
+                    break;
+                    
+                case 17: // 0x11 în Hexazecimal
+                    Pompa1_Off();
+                    break;
+                case 18: // 0x12 în Hexazecimal
+                    Pompa2_Off();
+                    break;
+                case 19: // 0x13 în Hexazecimal
+                    Pompa3_Off();
+                    break;
+                    
+                default:
+                    // În caz de comandă necunoscută, nu acționăm releele
+                    break;
+            }
+        }
+    }
+    return 0;
+}
+
+## Conexiuni Fizice și Mapare Pini (Cablaj)
 
 Pentru a asigura funcționarea stabilă a arhitecturii Master-Slave și a evita zgomotul electromagnetic provocat de comutația pompelor, pinii sunt mapați strict la nivel de registru bare-metal.
 
