@@ -149,6 +149,7 @@ int main(void) {
     }
     return 0;
 }
+```
 
 ## Conexiuni Fizice și Mapare Pini (Cablaj)
 
