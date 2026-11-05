@@ -3,70 +3,64 @@
 #include <avr/interrupt.h>
 
 /**
- * @brief Reads a single byte from the internal EEPROM.
- * 
- * Blocks until any ongoing write operation is complete, then
- * configures the address register and triggers the read.
- * 
- * @param address The EEPROM address (0 - 1023).
- * @return uint8_t The byte stored at the address.
+ * @file eeprom.c
+ * @brief Internal EEPROM access and plant stage persistence implementation.
  */
-uint8_t EEPROM_Read(uint16_t address) {
-    // Wait for completion of previous write
-    while (EECR & (1 << EEPE));
 
-    // Set up address register
+uint8_t EEPROM_Read(uint16_t address) {
+    if (address >= EEPROM_SIZE_BYTES) return 0xFF;
+
+    // Wait for completion of previous write
+    while (EECR & (1 << EEPE))
+        ;
+
+    // Set Address Register
     EEAR = address;
 
-    // Start eeprom read
+    // Trigger EEPROM Read
     EECR |= (1 << EERE);
 
-    // Return data
     return EEDR;
 }
 
-/**
- * @brief Writes a single byte to the internal EEPROM.
- * 
- * Blocks until any ongoing write operation is complete.
- * Follows the specific write sequence required by the AVR architecture:
- * 1. Set Address and Data registers.
- * 2. Write logical one to EEMPE (Master Write Enable).
- * 3. Write logical one to EEPE (Write Enable) within 4 clock cycles.
- * Interrupts are briefly disabled to ensure the timing sequence is met.
- * 
- * @param address The EEPROM address to write to.
- * @param data The byte to write.
- */
 void EEPROM_Write(uint16_t address, uint8_t data) {
-    // Wait for completion of previous write
-    while (EECR & (1 << EEPE));
+    if (address >= EEPROM_SIZE_BYTES) return;
 
-    // Set up address and Data Registers
+    // Wait for completion of previous write
+    while (EECR & (1 << EEPE))
+        ;
+
+    // Set Address and Data Registers
     EEAR = address;
     EEDR = data;
 
-    // Critical section for write sequence
-    uint8_t oldSREG = SREG;
-    cli(); 
+    // Critical section for 4-cycle write handshake
+    uint8_t old_sreg = SREG;
+    cli();
     EECR |= (1 << EEMPE);
     EECR |= (1 << EEPE);
-    SREG = oldSREG; 
+    SREG = old_sreg;
 }
 
-/**
- * @brief Updates a byte in the EEPROM.
- * 
- * Reads the current value at the address and writes the new value
- * ONLY if it differs. This helps prolong the lifespan of the EEPROM,
- * which has a limited number of write cycles (~100.000).
- * 
- * @param address The EEPROM address to update.
- * @param data The new byte to store.
- */
 void EEPROM_Update(uint16_t address, uint8_t data) {
-    uint8_t current_val = EEPROM_Read(address);
-    if (current_val != data) {
+    if (EEPROM_Read(address) != data) {
         EEPROM_Write(address, data);
     }
+}
+
+void EEPROM_SaveSlotStage(uint8_t slot_idx, uint8_t stage) {
+    if (slot_idx > 10) return;
+    uint16_t addr = EEPROM_STAGE_STORAGE_BASE + slot_idx;
+    EEPROM_Update(addr, stage);
+}
+
+uint8_t EEPROM_LoadSlotStage(uint8_t slot_idx) {
+    if (slot_idx > 10) return 0;
+    uint16_t addr = EEPROM_STAGE_STORAGE_BASE + slot_idx;
+    uint8_t stage = EEPROM_Read(addr);
+    // If EEPROM is unprogrammed (0xFF), default to stage 0 (Seedling)
+    if (stage > 2) {
+        return 0;
+    }
+    return stage;
 }

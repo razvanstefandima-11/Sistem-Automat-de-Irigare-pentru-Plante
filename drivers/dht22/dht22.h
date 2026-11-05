@@ -49,3 +49,4 @@ dht22_status_t DHT22_Read(dht22_data_t* data);
 bool DHT22_IsHumidityOptimalForPollination(float humidity);
 
 #endif // DHT22_H
+

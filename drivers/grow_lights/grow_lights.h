@@ -3,56 +3,51 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "drivers/dosing_system/dosing_system.h" // For phenological_stage_t
 
 /**
  * @file grow_lights.h
- * @brief Full-Spectrum Grow Lights PWM Driver for ATmega2560 (C.A.M.P.I. Master).
+ * @brief Full-Spectrum Grow Lights Hardware PWM Driver for ATmega2560.
  * 
- * Controls 12V Full-Spectrum LED bars via power MOSFET (IRLZ44N) using hardware PWM.
+ * Generates flicker-free 1 kHz PWM via 16-bit Timer1 (OC1A / PB5 / Pin 11)
+ * directly controlling power MOSFETs (IRLZ44N) for 12V LED fixtures.
  * 
- * Stage Profiles (Section 6 of C.A.M.P.I. Specifications):
- *  - 1. Răsad (Seedling):            50% PWM (Redus)
- *  - 2. Creștere Vegetativă:         80% PWM (Intens)
- *  - 3. Înflorire / Fruct:          100% PWM (Maxim)
- *  - Night / Inactive:                0% PWM (Off)
+ * Phenological Stage Profiles:
+ *  - Seedling (Răsad): 50% PWM (Redus)
+ *  - Vegetative Growth: 80% PWM (Intens)
+ *  - Flowering / Fruit: 100% PWM (Maxim)
+ *  - Inactive / Night: 0% PWM (Off)
  */
 
-#define GROW_LIGHTS_PWM_FREQ_HZ 1000UL /**< 1 kHz flicker-free LED PWM */
-
-#define GROW_LIGHTS_DUTY_OFF         0
-#define GROW_LIGHTS_DUTY_SEEDLING   50
-#define GROW_LIGHTS_DUTY_VEGETATIVE 80
-#define GROW_LIGHTS_DUTY_FLOWERING 100
+typedef enum {
+    GROW_STAGE_OFF = 0,
+    GROW_STAGE_SEEDLING = 1,   /**< 50% Intensity */
+    GROW_STAGE_VEGETATIVE = 2, /**< 80% Intensity */
+    GROW_STAGE_FLOWERING = 3   /**< 100% Intensity */
+} grow_stage_t;
 
 /**
- * @brief Initializes the hardware PWM peripheral for Grow Lights.
+ * @brief Configures Timer1 in Fast PWM Mode 14 (1 kHz) on pin PB5.
  */
 void GrowLights_Init(void);
 
 /**
- * @brief Sets the raw PWM duty cycle percentage (0 - 100%).
+ * @brief Sets raw duty cycle percentage (0 - 100%).
  * 
- * @param duty_percent Percentage from 0% (OFF) to 100% (Full intensity).
+ * @param duty_percent Percentage from 0 to 100.
  */
 void GrowLights_SetDuty(uint8_t duty_percent);
 
 /**
- * @brief Automatically sets the recommended photoperiod intensity for a given phenological stage.
+ * @brief Sets illumination profile by phenological stage.
  * 
- * @param stage STAGE_SEEDLING (50%), STAGE_VEGETATIVE (80%), or STAGE_FLOWERING (100%).
+ * @param stage GROW_STAGE_SEEDLING, GROW_STAGE_VEGETATIVE, GROW_STAGE_FLOWERING, or GROW_STAGE_OFF.
  */
-void GrowLights_SetStage(phenological_stage_t stage);
+void GrowLights_SetStage(grow_stage_t stage);
 
 /**
- * @brief Turns off the grow lights.
- */
-void GrowLights_TurnOff(void);
-
-/**
- * @brief Gets the current duty cycle percentage.
+ * @brief Returns current duty cycle percentage.
  * 
- * @return uint8_t Current duty cycle (0 - 100).
+ * @return uint8_t 
  */
 uint8_t GrowLights_GetDuty(void);
 

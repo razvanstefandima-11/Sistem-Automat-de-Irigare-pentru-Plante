@@ -109,3 +109,4 @@ bool DHT22_IsHumidityOptimalForPollination(float humidity) {
     // Condition specified in C.A.M.P.I. Section 4.2: optimal RH between 50% and 70%
     return (humidity >= 50.0f && humidity <= 70.0f);
 }
+
