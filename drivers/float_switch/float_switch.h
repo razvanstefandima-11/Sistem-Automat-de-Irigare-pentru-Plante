@@ -65,4 +65,3 @@ tank_level_state_t FloatSwitch_GetState(float_tank_id_t tank);
 bool FloatSwitch_IsDryRunLocked(void);
 
 #endif // FLOAT_SWITCH_H
-

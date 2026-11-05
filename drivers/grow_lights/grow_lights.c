@@ -1,63 +1,51 @@
 #include "grow_lights.h"
-#include <avr/io.h>
+#include "drivers/gpio/gpio.h"
+#include "drivers/pwm/pwm.h"
 
 /**
  * @file grow_lights.c
- * @brief 16-bit Timer1 direct register PWM implementation for LED fixtures.
+ * @brief Full-Spectrum Grow Lights PWM driver implementation.
  */
 
-// Timer1 TOP value for 1 kHz PWM at F_CPU = 16MHz and Prescaler = 8:
-// Frequency = 16,000,000 / (8 * TOP) = 1,000 Hz -> TOP = 2000
-#define GROW_LIGHTS_TIMER1_TOP 2000U
+// Hardware PWM pin on ATmega2560: Timer1 OC1A (PB5 / Pin 11)
+#define GROW_LIGHTS_PORT GPIO_PORTB
+#define GROW_LIGHTS_PIN  5
 
-static uint8_t current_duty = 0;
+static uint8_t current_duty_pct = 0;
 
 void GrowLights_Init(void) {
-    // 1. Configure Timer1 for Fast PWM Mode 14 (TOP = ICR1)
-    // Non-inverting on OC1A (PB5): COM1A1 = 1, COM1A0 = 0
-    TCCR1A = (1 << COM1A1) | (1 << WGM11);
-
-    // WGM13 = 1, WGM12 = 1, Prescaler = 8 (CS11 = 1)
-    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
-
-    // 2. Set TOP to 2000 (1000 Hz)
-    ICR1 = GROW_LIGHTS_TIMER1_TOP;
-
-    // 3. Initial Duty Cycle = 0 (OFF)
-    OCR1A = 0;
-
-    // 4. Set PB5 (OC1A / Arduino Mega Pin 11) as OUTPUT
-    DDRB |= (1 << DDB5);
-
-    current_duty = 0;
+    // Initialize Timer1 Fast PWM at 1000 Hz
+    PWM_Init(GROW_LIGHTS_PORT, GROW_LIGHTS_PIN, GROW_LIGHTS_PWM_FREQ_HZ);
+    GrowLights_TurnOff();
 }
 
 void GrowLights_SetDuty(uint8_t duty_percent) {
     if (duty_percent > 100) duty_percent = 100;
-    current_duty = duty_percent;
+    current_duty_pct = duty_percent;
 
-    // Map 0-100% to 0-GROW_LIGHTS_TIMER1_TOP
-    uint32_t val = ((uint32_t)duty_percent * GROW_LIGHTS_TIMER1_TOP) / 100UL;
-    OCR1A = (uint16_t)val;
+    // Convert 0-100% to 0-255 duty cycle for PWM driver
+    uint8_t raw_duty = (uint8_t)(((uint16_t)duty_percent * 255UL) / 100UL);
+    PWM_SetDutyCycle(GROW_LIGHTS_PORT, GROW_LIGHTS_PIN, raw_duty);
 }
 
-void GrowLights_SetStage(grow_stage_t stage) {
+void GrowLights_SetStage(phenological_stage_t stage) {
     switch (stage) {
-        case GROW_STAGE_OFF:
-            GrowLights_SetDuty(0);
+        case STAGE_SEEDLING:
+            GrowLights_SetDuty(GROW_LIGHTS_DUTY_SEEDLING);
             break;
-        case GROW_STAGE_SEEDLING:
-            GrowLights_SetDuty(50); // 50% Redus
+        case STAGE_VEGETATIVE:
+            GrowLights_SetDuty(GROW_LIGHTS_DUTY_VEGETATIVE);
             break;
-        case GROW_STAGE_VEGETATIVE:
-            GrowLights_SetDuty(80); // 80% Intens
-            break;
-        case GROW_STAGE_FLOWERING:
-            GrowLights_SetDuty(100); // 100% Maxim
+        case STAGE_FLOWERING:
+            GrowLights_SetDuty(GROW_LIGHTS_DUTY_FLOWERING);
             break;
     }
 }
 
+void GrowLights_TurnOff(void) {
+    GrowLights_SetDuty(GROW_LIGHTS_DUTY_OFF);
+}
+
 uint8_t GrowLights_GetDuty(void) {
-    return current_duty;
+    return current_duty_pct;
 }

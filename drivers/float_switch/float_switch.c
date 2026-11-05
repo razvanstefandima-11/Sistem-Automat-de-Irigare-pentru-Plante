@@ -73,4 +73,3 @@ bool FloatSwitch_IsDryRunLocked(void) {
     return (tanks[FLOAT_TANK_WATER].confirmed_state == TANK_LEVEL_EMPTY ||
             tanks[FLOAT_TANK_NUTRIENTS].confirmed_state == TANK_LEVEL_EMPTY);
 }
-
