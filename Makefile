@@ -1,169 +1,134 @@
-# ==============================================================================
-# C.A.M.P.I. - Automated Control & Monitoring of Indoor Plants
-# Precision Smart Farming System for Hydroponic Dwarf Tomatoes (Micro Tom)
-# Master Unit: Microchip ATmega2560 (Bare-Metal C / avr-gcc)
-# ==============================================================================
+# Makefile for ATmega328P Project
 
-# Microcontroller & Frequency Settings
-MCU   = atmega2560
+# Microcontroller Settings
+MCU = atmega328p
 F_CPU = 16000000UL
 
-# Programmer Settings (Arduino Mega 2560 Bootloader uses STK500v2 / wiring protocol)
-PROGRAMMER ?= wiring
-PORT       ?= /dev/ttyACM0
-BAUD       ?= 115200
+# Programmer Settings
+PROGRAMMER = arduino
+PORT = /dev/ttyUSB0
+#BAUD = 57600
+BAUD = 115200
 
-# Board Selection (default: mega2560)
-BOARD ?= mega2560
+# Board Selection (default to nano)
+BOARD ?= nano
 
-# Toolchain Binaries
-CC       = avr-gcc
-OBJCOPY  = avr-objcopy
-OBJDUMP  = avr-objdump
-AVR_SIZE = avr-size
-AVRDUDE  = avrdude
+# Compiler Settings
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+AVRDUDE = avrdude
 
-# Output Directories
+# Directories
 OBJDIR = obj
 BINDIR = bin
 
-# Include Directories
-INCLUDES = -I. \
-           -Isrc \
-           -Ibsp \
-           -Iutils \
-           -Idrivers/gpio \
-           -Idrivers/adc \
-           -Idrivers/button \
-           -Idrivers/buzzer \
-           -Idrivers/eeprom \
-           -Idrivers/i2c \
-           -Idrivers/interrupt \
-           -Idrivers/lcd \
-           -Idrivers/led \
-           -Idrivers/nivel_apa \
-           -Idrivers/pompe \
-           -Idrivers/pwm \
-           -Idrivers/s_umiditate \
-           -Idrivers/timer \
-           -Idrivers/usart \
-           -Idrivers/dht22 \
-           -Idrivers/capacitive_moisture \
-           -Idrivers/float_switch \
-           -Idrivers/dosing_system \
-           -Idrivers/thermal_ptc \
-           -Idrivers/grow_lights
+# Compiler Flags
+CFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall -Wextra -std=gnu99
+CFLAGS += -I. -Idrivers/gpio -Idrivers/button -Idrivers/interrupt -Idrivers/timer -Idrivers/eeprom -Idrivers/adc -Idrivers/usart -Ibsp -Iutils
 
-# Compiler Optimization & Diagnostics Flags
-CFLAGS  = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -Wall -Wextra -std=gnu99
-CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
-CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += $(INCLUDES)
-
-# Linker Flags (Garbage collect unused sections to conserve flash)
-LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
-
-# Board Configuration Definitions
-ifeq ($(BOARD), mega2560)
-    CFLAGS += -DBOARD_MEGA2560
-else ifeq ($(BOARD), mega)
-    CFLAGS += -DBOARD_MEGA2560
-else ifeq ($(BOARD), nano)
+ifeq ($(BOARD), nano)
     CFLAGS += -DBOARD_NANO
 else ifeq ($(BOARD), uno)
     CFLAGS += -DBOARD_UNO
 else
-    $(error Invalid BOARD specified: '$(BOARD)'. Supported: mega2560, mega, nano, uno)
+    $(error Invalid BOARD specified. Use 'nano' or 'uno')
 endif
 
-# Source Files List
-SRC = src/main.c \
-      drivers/gpio/gpio.c \
-      drivers/adc/adc.c \
-      drivers/lcd/lcd.c \
-      drivers/usart/usart.c \
-      drivers/button/button.c \
-      drivers/i2c/i2c_master.c \
-      drivers/i2c/i2c_slave.c \
-      drivers/buzzer/buzzer.c \
-      drivers/led/led.c \
-      drivers/nivel_apa/nivel_apa.c \
-      drivers/s_umiditate/s_umiditate.c \
-      drivers/pompe/pompe.c \
-      drivers/interrupt/external_interrupt.c \
-      drivers/timer/timer0.c \
-      drivers/timer/timer1.c \
-      drivers/timer/timer2.c \
-      drivers/pwm/pwm.c \
-      drivers/eeprom/eeprom.c \
-      drivers/dht22/dht22.c \
-      drivers/capacitive_moisture/capacitive_moisture.c \
-      drivers/float_switch/float_switch.c \
-      drivers/dosing_system/dosing_system.c \
-      drivers/thermal_ptc/thermal_ptc.c \
-      drivers/grow_lights/grow_lights.c \
-      utils/delay.c
+# Source Files
+SRC = src/main.c drivers/gpio/gpio.c drivers/adc/adc.c drivers/lcd/lcd.c drivers/usart/usart.c drivers/button/button.c drivers/i2c/i2c_master.c drivers/i2c/i2c_slave.c drivers/buzzer/buzzer.c drivers/led/led.c drivers/nivel_apa/nivel_apa.c drivers/s_umiditate/s_umiditate.c drivers/pompe/pompe.c drivers/interrupt/external_interrupt.c drivers/timer/timer0.c drivers/timer/timer1.c drivers/timer/timer2.c drivers/pwm/pwm.c drivers/eeprom/eeprom.c utils/delay.c
 
-# Object Files Mapping
+# Object Files
+# Replace .c extension with .o and prepend OBJDIR, keeping directory structure
 OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(SRC))
 
-# Target Binary Names
+# Target Name
 TARGET = $(BINDIR)/main
 
-# Default Build Target
-all: $(TARGET).hex size
+# Rules
+all: directories $(TARGET).hex
 
-# Link Target ELF
-$(TARGET).elf: $(OBJ)
+directories:
 	@mkdir -p $(BINDIR)
-	@echo "Linking ELF target: $@"
-	$(CC) $(LDFLAGS) -o $@ $^
+	@mkdir -p $(OBJDIR)/src
+	@mkdir -p $(OBJDIR)/utils
+	@mkdir -p $(OBJDIR)/drivers/adc
+	@mkdir -p $(OBJDIR)/drivers/usart
+	@mkdir -p $(OBJDIR)/drivers/button
+	@mkdir -p $(OBJDIR)/drivers/buzzer
+	@mkdir -p $(OBJDIR)/drivers/eeprom
+	@mkdir -p $(OBJDIR)/drivers/gpio
+	@mkdir -p $(OBJDIR)/drivers/i2c
+	@mkdir -p $(OBJDIR)/drivers/interrupt
+	@mkdir -p $(OBJDIR)/drivers/lcd
+	@mkdir -p $(OBJDIR)/drivers/led
+	@mkdir -p $(OBJDIR)/drivers/nivel_apa
+	@mkdir -p $(OBJDIR)/drivers/pompe
+	@mkdir -p $(OBJDIR)/drivers/pwm
+	@mkdir -p $(OBJDIR)/drivers/s_umiditate
+	@mkdir -p $(OBJDIR)/drivers/timers
+$(TARGET).elf: $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
 
-# Generate Intel HEX for Flash Programmer
 $(TARGET).hex: $(TARGET).elf
-	@echo "Generating HEX: $@"
 	$(OBJCOPY) -O ihex -R .eeprom $< $@
 
-# Compile C Sources into Object Files
 $(OBJDIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	@echo "Compiling: $<"
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Display Memory Utilization (Flash & SRAM)
-size: $(TARGET).elf
-	@echo "\n================ Memory Utilization ================"
-	@$(AVR_SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
-	@echo "====================================================\n"
-
-# Flash Firmware via avrdude
 flash: $(TARGET).hex
-	@echo "Flashing $< to $(MCU) on $(PORT) at $(BAUD) baud..."
 	$(AVRDUDE) -v -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -b $(BAUD) -D -U flash:w:$<:i
 
-# Clean Build Artifacts
 clean:
-	@echo "Cleaning build artifacts..."
 	rm -rf $(OBJDIR) $(BINDIR)
 
-# Host Test Targets (using Native GCC)
-test_gpio:
+# Test Runner Rule (Host GCC)
+# Compiles test_gpio.c + registers.c
+test_gpio: directories
 	@mkdir -p $(BINDIR)/test
 	gcc -I. -Isrc -Idrivers/gpio -Idrivers/interrupt -Idrivers/timer -Idrivers/eeprom -Idrivers/adc -Ibsp -Iutils -Itest -Itest/mocks -DUNIT_TEST -o $(BINDIR)/test/test_gpio test/test_gpio.c test/mocks/registers.c
 	@echo "Running GPIO Tests..."
 	@./$(BINDIR)/test/test_gpio
 
-test_pwm:
+test_pwm: directories
 	@mkdir -p $(BINDIR)/test
 	gcc -I. -Isrc -Idrivers/gpio -Idrivers/interrupt -Idrivers/timer -Idrivers/eeprom -Idrivers/adc -Ibsp -Iutils -Itest -Itest/mocks -DUNIT_TEST -o $(BINDIR)/test/test_pwm test/test_pwm.c drivers/timer/timer1.c drivers/timer/timer2.c test/mocks/registers.c
 	@echo "Running PWM Tests..."
 	@./$(BINDIR)/test/test_pwm
 
-test_pwm_wrapper:
+test_pwm_wrapper: directories
 	@mkdir -p $(BINDIR)/test
 	gcc -I. -Isrc -Idrivers/gpio -Idrivers/interrupt -Idrivers/timer -Idrivers/pwm -Idrivers/eeprom -Idrivers/adc -Ibsp -Iutils -Itest -Itest/mocks -DUNIT_TEST -o $(BINDIR)/test/test_pwm_wrapper test/test_pwm_wrapper.c drivers/timer/timer1.c drivers/timer/timer2.c drivers/pwm/pwm.c test/mocks/registers.c
-
+	# Run all tests
 test: test_gpio test_pwm test_pwm_wrapper
-	@echo "All host tests passed successfully!"
+	@echo "All tests passed!"
 
-.PHONY: all clean flash size test test_gpio test_pwm test_pwm_wrapper
+# Code Coverage Target
+coverage: directories
+	@mkdir -p $(BINDIR)/coverage
+	@echo "Compiling for Coverage..."
+	# Compile objects separately to ensure .gcno files are named correctly
+	gcc --coverage -O0 -c -I. -Isrc -Idrivers/gpio -Idrivers/interrupt -Idrivers/timer -Idrivers/eeprom -Idrivers/adc -Ibsp -Iutils -Itest -Itest/mocks -DUNIT_TEST -o $(BINDIR)/coverage/test_gpio.o test/test_gpio.c
+	gcc --coverage -O0 -c -I. -Isrc -Itest/mocks -DUNIT_TEST -o $(BINDIR)/coverage/registers.o test/mocks/registers.c
+	# Link
+	gcc --coverage -O0 -o $(BINDIR)/coverage/test_gpio_cov $(BINDIR)/coverage/test_gpio.o $(BINDIR)/coverage/registers.o
+	@echo "Running Tests to generate profile data..."
+	@./$(BINDIR)/coverage/test_gpio_cov
+	@echo "Generating GCOV reports..."
+	# Run gcov on the object file
+	gcov -o $(BINDIR)/coverage/test_gpio.o test/test_gpio.c
+	# Move gcov files to coverage dir
+	mv *.gcov $(BINDIR)/coverage/
+
+# HTML Coverage Report (Requires lcov)
+coverage-html: coverage
+	@mkdir -p $(BINDIR)/coverage/html
+	@echo "Capturing LCOV data..."
+	lcov --capture --directory $(BINDIR)/coverage --base-directory . --output-file $(BINDIR)/coverage/coverage.info --ignore-errors unsupported
+	@echo "Filtering unwanted files (system libraries, tests, mocks)..."
+	lcov --remove $(BINDIR)/coverage/coverage.info '/usr/*' 'test/*' 'utils/*' --output-file $(BINDIR)/coverage/coverage_cleaned.info --ignore-errors unused,unsupported
+	@echo "Generating HTML report..."
+	genhtml $(BINDIR)/coverage/coverage_cleaned.info --output-directory $(BINDIR)/coverage/html --ignore-errors unsupported
+	@echo "Report generated at $(BINDIR)/coverage/html/index.html"
+
+.PHONY: all flash clean directories test coverage coverage-html

@@ -1,183 +1,65 @@
-/**
- * @file usart.c
- * @brief Asynchronous USART1 Driver implementation for ATmega2560 (C.A.M.P.I. Master).
- *
- * Implements interrupt-driven asynchronous reception using an efficient circular ring buffer.
- * Enables non-blocking command reception from the ESP32 IoT Gateway.
- */
-
+#include "drivers/timer/timer0.h"
 #include "usart.h"
-#include <avr/io.h>
-#include <avr/interrupt.h>
+/**
+ * @brief Initializes USART communication with the specified baud rate.
+ *
+ * @param fosc Oscillator frequency in Hz (e.g. 16000000 for 16MHz)
+ * @param baud Desired baud rate (e.g. 57600)
+ */
+void USART_Init(unsigned long fosc, unsigned int baud)
+{
+    unsigned long ubrr = (fosc / (16UL * baud)) - 1;
 
-#define USART1_RX_BUFFER_MASK (USART1_RX_BUFFER_SIZE - 1)
+    UBRR0H = (unsigned char)(ubrr >> 8);
+    UBRR0L = (unsigned char)(ubrr);
 
-#if (USART1_RX_BUFFER_SIZE & USART1_RX_BUFFER_MASK)
-#error "USART1_RX_BUFFER_SIZE must be a power of 2!"
-#endif
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
 
-// Circular RX Ring Buffer
-static volatile uint8_t rx_buffer[USART1_RX_BUFFER_SIZE];
-static volatile uint8_t rx_head = 0;
-static volatile uint8_t rx_tail = 0;
-static volatile uint8_t rx_overflow_flag = 0;
+    // 8 data bits, 1 stop bit, no parity
+    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+}
 
 /**
- * @brief USART1 RX Complete Interrupt Service Routine.
- * 
- * Automatically triggered when a new byte arrives on the RX1 pin (Pin 19, PD2).
- * Reads the byte from UDR1 into the circular buffer.
+ * @brief Transmits a buffer of bytes over USART.
+ *
+ * @param buffer Pointer to the data buffer to transmit
+ * @param size   Number of bytes to send
  */
-ISR(USART1_RX_vect) {
-    uint8_t data = UDR1;
-    uint8_t next_head = (rx_head + 1) & USART1_RX_BUFFER_MASK;
-
-    if (next_head != rx_tail) {
-        rx_buffer[rx_head] = data;
-        rx_head = next_head;
-    } else {
-        // Buffer is full: incoming byte is dropped, set overflow flag
-        rx_overflow_flag = 1;
+void USART_Transmit(void* buffer, uint8_t size)
+{
+    unsigned char* data = (unsigned char*)buffer;
+    for (int i = 0; i < size; i++) {
+        while (!(UCSR0A & (1 << UDRE0)))
+            ;
+        UDR0 = data[i];
     }
 }
 
-void USART1_Init(uint32_t fosc, uint32_t baud) {
-    uint16_t ubrr;
+/**
+ * @brief Receives bytes over USART into a buffer until a newline, carriage
+ *        return, or 1000ms timeout. The result is always null-terminated.
+ *
+ * @param buffer Pointer to destination buffer (minimum 51 bytes recommended)
+ * @return       Number of bytes received, excluding the null terminator
+ */
+int USART_Receive(void* buffer)
+{
+    unsigned char* data = (unsigned char*)buffer;
+    int i = 0;
+    uint32_t last_time = Millis();
 
-    // Use Double Speed mode (U2X1 = 1) for baud rates >= 57600 to minimize divisor error
-    if (baud >= 57600UL) {
-        UCSR1A = (1 << U2X1);
-        ubrr = (uint16_t)(((fosc + (4UL * baud)) / (8UL * baud)) - 1UL);
-    } else {
-        UCSR1A = 0;
-        ubrr = (uint16_t)(((fosc + (8UL * baud)) / (16UL * baud)) - 1UL);
-    }
+    while ((Millis() - last_time <= TIMEOUT_USART) && (i < MAX_SIZE_RECEIVE_USART)) {
+        if (UCSR0A & (1 << RXC0)) {
+            data[i] = UDR0;
+            last_time = Millis();
 
-    UBRR1H = (uint8_t)(ubrr >> 8);
-    UBRR1L = (uint8_t)(ubrr & 0xFF);
-
-    // Set frame format: Asynchronous, 8 data bits, 1 stop bit, no parity (8N1)
-    UCSR1C = (1 << UCSZ11) | (1 << UCSZ10);
-
-    // Reset ring buffer indices
-    rx_head = 0;
-    rx_tail = 0;
-    rx_overflow_flag = 0;
-
-    // Enable Receiver, Transmitter, and RX Complete Interrupt
-    UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1);
-
-    // Enable global interrupts so ISR can execute
-    sei();
-}
-
-void USART1_TransmitChar(char c) {
-    // Wait for empty transmit buffer (UDRE1 bit in UCSR1A)
-    while (!(UCSR1A & (1 << UDRE1)))
-        ;
-    UDR1 = (uint8_t)c;
-}
-
-void USART1_Transmit(const void* data, uint16_t size) {
-    const uint8_t* ptr = (const uint8_t*)data;
-    for (uint16_t i = 0; i < size; i++) {
-        USART1_TransmitChar((char)ptr[i]);
-    }
-}
-
-void USART1_TransmitString(const char* str) {
-    if (!str) return;
-    while (*str) {
-        USART1_TransmitChar(*str++);
-    }
-}
-
-uint8_t USART1_Available(void) {
-    uint8_t head = rx_head;
-    uint8_t tail = rx_tail;
-    return (head - tail) & USART1_RX_BUFFER_MASK;
-}
-
-int16_t USART1_Read(void) {
-    if (rx_head == rx_tail) {
-        return -1; // Empty buffer
-    }
-
-    uint8_t byte = rx_buffer[rx_tail];
-    rx_tail = (rx_tail + 1) & USART1_RX_BUFFER_MASK;
-    return (int16_t)byte;
-}
-
-int16_t USART1_Peek(void) {
-    if (rx_head == rx_tail) {
-        return -1; // Empty buffer
-    }
-    return (int16_t)rx_buffer[rx_tail];
-}
-
-uint8_t USART1_IsLineAvailable(void) {
-    uint8_t tail = rx_tail;
-    uint8_t head = rx_head;
-
-    while (tail != head) {
-        uint8_t c = rx_buffer[tail];
-        if (c == '\n' || c == '\r') {
-            return 1;
-        }
-        tail = (tail + 1) & USART1_RX_BUFFER_MASK;
-    }
-    return 0;
-}
-
-uint8_t USART1_ReadLine(char* buffer, uint8_t max_len) {
-    if (!buffer || max_len < 2) {
-        return 0;
-    }
-
-    // Do not consume bytes if a full line has not arrived yet (strictly non-blocking)
-    if (!USART1_IsLineAvailable()) {
-        return 0;
-    }
-
-    uint8_t idx = 0;
-    while (rx_head != rx_tail && idx < (max_len - 1)) {
-        uint8_t c = rx_buffer[rx_tail];
-        rx_tail = (rx_tail + 1) & USART1_RX_BUFFER_MASK;
-
-        // Handle line endings (\r, \n, or \r\n)
-        if (c == '\r') {
-            // Check if followed by \n and discard it as part of CRLF
-            if (rx_head != rx_tail && rx_buffer[rx_tail] == '\n') {
-                rx_tail = (rx_tail + 1) & USART1_RX_BUFFER_MASK;
+            if (data[i] == '\n' || data[i] == '\r') {
+                break;
             }
-            break;
+            i++;
         }
-        if (c == '\n') {
-            break;
-        }
-
-        buffer[idx++] = (char)c;
     }
 
-    buffer[idx] = '\0';
-    return idx;
-}
-
-int USART1_Receive(void* buffer) {
-    return (int)USART1_ReadLine((char*)buffer, MAX_SIZE_RECEIVE_USART);
-}
-
-void USART1_FlushRx(void) {
-    uint8_t sreg = SREG;
-    cli();
-    rx_head = 0;
-    rx_tail = 0;
-    rx_overflow_flag = 0;
-    SREG = sreg;
-}
-
-uint8_t USART1_CheckAndClearOverflow(void) {
-    uint8_t overflow = rx_overflow_flag;
-    rx_overflow_flag = 0;
-    return overflow;
+    data[i] = '\0';
+    return i;
 }
