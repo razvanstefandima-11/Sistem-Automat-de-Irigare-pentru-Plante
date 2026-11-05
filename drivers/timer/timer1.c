@@ -1,5 +1,10 @@
 #include "timer1.h"
 
+/**
+ * @file timer1.c
+ * @brief 16-bit Timer1 PWM implementation adapted for ATmega2560 (C.A.M.P.I. Master).
+ */
+
 void Timer1_FastPWM_Init(uint16_t prescaler, uint16_t top) {
     // 1. Set Fast PWM Mode 14 (WGM13:0 = 1110)
     // TOP is ICR1, Update of OCR1x at BOTTOM, TOV1 Flag Set on TOP
@@ -14,22 +19,27 @@ void Timer1_FastPWM_Init(uint16_t prescaler, uint16_t top) {
     ICR1 = top;
 
     // Set Prescaler
-    // 001 = /1, 010 = /8, 011 = /64, 100 = /256, 101 = /1024
     switch (prescaler) {
-        case 1: TCCR1B |= (1 << CS10); break;
-        case 8: TCCR1B |= (1 << CS11); break;
-        case 64: TCCR1B |= (1 << CS11) | (1 << CS10); break;
-        case 256: TCCR1B |= (1 << CS12); break;
+        case 1:    TCCR1B |= (1 << CS10); break;
+        case 8:    TCCR1B |= (1 << CS11); break;
+        case 64:   TCCR1B |= (1 << CS11) | (1 << CS10); break;
+        case 256:  TCCR1B |= (1 << CS12); break;
         case 1024: TCCR1B |= (1 << CS12) | (1 << CS10); break;
-        default: TCCR1B |= (1 << CS10); // Default to no prescaling
+        default:   TCCR1B |= (1 << CS10); break; // Default to no prescaling
     }
 
     // Initialize Duty Cycles to 0
     OCR1A = 0;
     OCR1B = 0;
 
-    // Enable Timer1 Outputs on PB1 (OC1A/D9) and PB2 (OC1B/D10)
+    // Configure Output Pins:
+#if defined(__AVR_ATmega2560__)
+    // On ATmega2560: OC1A is PB5 (Arduino Mega Pin 11), OC1B is PB6 (Arduino Mega Pin 12)
+    DDRB |= (1 << DDB5) | (1 << DDB6);
+#else
+    // ATmega328P / Host unit tests: OC1A is PB1, OC1B is PB2
     DDRB |= (1 << DDB1) | (1 << DDB2);
+#endif
 }
 
 void Timer1_SetDutyCycleA(uint16_t duty) {

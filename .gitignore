@@ -1,0 +1,6 @@
+# Host test binaries & coverage artifacts
+bin/test/
+bin/coverage/
+*.gcda
+*.gcno
+*.gcov
